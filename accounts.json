@@ -1,0 +1,1570 @@
+{
+  "jd_express": [
+    {
+      "id": "jd_main",
+      "cookies": [
+        {
+          "name": "__jda",
+          "value": "122270672.17733094860291275918518.1773309486.1773309486.1773309486.1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdv",
+          "value": "122270672%7Cdirect%7C-%7Cnone%7C-%7C1773309486029",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdc",
+          "value": "122270672",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "mba_muid",
+          "value": "17733094860291275918518",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpa",
+          "value": "50fd6c46-6aa4-801d-bc2d-1beb9b1b5ec3-1773309486",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpx",
+          "value": "50fd6c46-6aa4-801d-bc2d-1beb9b1b5ec3-1773309486",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "guid",
+          "value": "23086341d57ecd9ec0566e7e17bdc8a7b82e32a186a903df01da617abb533e23",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lang",
+          "value": "chs",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lsid",
+          "value": "3598991115190ny5v6o9in7rusmgb9n31m4ur3rsyt80h1773309486689",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lstoken",
+          "value": "tmwgunbm",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpb",
+          "value": "BApXW2PFz4vlAC8JWmONuqQ7kcpwg3e8ZBjFxk6lo9xJ1MpK1r4-2z7r9UQ",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jcap_dvzw_fp",
+          "value": "mqL8uTG4BmSvurHF0aMSjbH00tK24OMQmJZdm1FhlulSNECMwZagfuhURhkdBeqH8C9zGlwZHRRRAMncF4wDlnCSPGc=",
+          "domain": ".m.jd.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "TrackerID",
+          "value": "cQl8Lde4L42x4Jq_9e89jNyMTbwVCG5m5SdIbszScWkp4oXMR39kkVBlTIwoBHDMaDN1OR_80MlYsQtlZuy_jPRV_NJyGtMJ4M7vLPUSj7STHdeK3UcYJKrNlN1Fe6ix",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_key",
+          "value": "AAJpso5XADA-IM1Qh8jF38X14U1kuR8Qq0IAlUgCxu3FkrYviS_7G5Bu_xX2vWs6xkkvn9Ut4k8",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_pin",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_st",
+          "value": "1_3e-V1mT8eodjryFCWj6SE8Te3Hp8pEOkYI_doyocJKLuGn4HVQ25Xfu3OlTJrL53jkO7sYEkLNKiBE-Fn3Rrg0J-U9KBsrDCfqSkcjqmlPRYCZpeqRUuXHfPB3hC2B0jknJ7mxx5IKXALIuEwpuEZ9JnuBYgrPp2Heqf9RJ6lCjHefianuj5k3NofjFCW0pPBjDs64OIb84lw-NQygAQLPEI-Fa9",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_token",
+          "value": "8n698kxr",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pwdt_id",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "s_key",
+          "value": "AAJpso5XADBq3vRdS_Dhr6GJPuwsbuaO8JCY46Uhg2pzY7-r2taNrnqoylmv5sxMaRM7qt7Ctko",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "s_pin",
+          "value": "sxm1129",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sfstoken",
+          "value": "tk01mb56b1ba3a8sM3gzKzF4Mysyr8wP2uKRP6WpQVxkCrhr5S1HV5G6v5qlh+Y2FWAgGUM4li2mnYPhC11c9DTb4zCL",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "whwswswws",
+          "value": "",
+          "domain": ".m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wxa_level",
+          "value": "1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "retina",
+          "value": "0",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cid",
+          "value": "9",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wqmnx1",
+          "value": "MDEyNjM1M3BtYzdsLlA7IG4gICBPIGVpNTVUbEcpczFNZTFhLzEzWWRmNDNWUkRGSCZS",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jxsid",
+          "value": "17733095278822952672",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appCode",
+          "value": "ms0ca95114",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdb",
+          "value": "122270672.2.17733094860291275918518|1.1773309486",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "webp",
+          "value": "1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "mba_sid",
+          "value": "17733094860301836365403.2",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "visitkey",
+          "value": "5553729841591638175",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sdtoken",
+          "value": "AAbEsBpEIOVjqTAKCQtvQu17WNMXAobRDFTCsWKk9qXdul2yod5uDABaDmyW5WCSWJhNtSbuhdgBdDeoypMzQCNhq2QFY5rmKleobucAPN85eoi7K6DozYln94x2K7wDYZb4",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "__jd_ref_cls",
+          "value": "MYL_Display_Init",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "3AB9D23F7A4B3CSS",
+          "value": "jdd03WMXPHBEBMBJ3RWW5Q3VHCILTVPZALQ6QPLOT7N2MF5R5PSLYUUP4MPSUYAEWS5RBRDYMC6GVUJZ7QPHFFU6AO2YMIYAAAAM44F6AR2YAAAAACIVNGJA3NG3SHEX",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "3AB9D23F7A4B3C9B",
+          "value": "WMXPHBEBMBJ3RWW5Q3VHCILTVPZALQ6QPLOT7N2MF5R5PSLYUUP4MPSUYAEWS5RBRDYMC6GVUJZ7QPHFFU6AO2YMIY",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_gia_d",
+          "value": "1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T14:58:01.811812",
+      "fail_count": 0,
+      "harvested_at": "2026-03-12T17:58:48.174430"
+    },
+    {
+      "id": "jd_express_20260313_091853",
+      "cookies": [
+        {
+          "name": "__jda",
+          "value": "122270672.17733647353281288150884.1773364735.1773364735.1773364735.1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdb",
+          "value": "122270672.1.17733647353281288150884|1.1773364735",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdv",
+          "value": "122270672%7Cdirect%7C-%7Cnone%7C-%7C1773364735328",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__jdc",
+          "value": "122270672",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "mba_muid",
+          "value": "17733647353281288150884",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpa",
+          "value": "a8702d24-6b5a-6ee7-70c8-d609412720e1-1773364735",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpx",
+          "value": "a8702d24-6b5a-6ee7-70c8-d609412720e1-1773364735",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "guid",
+          "value": "81c1996aa8b5d1bd8b489a70fdcb19756f646daa9f2b1557fe79649cb9644757",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lang",
+          "value": "chs",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lsid",
+          "value": "28846487151611m9rdvsre5ihqtxdq72irlg75plz2cu31773364735861",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lstoken",
+          "value": "zm4dsmui",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "mba_sid",
+          "value": "1773364735329849576696.1",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "shshshfpb",
+          "value": "BApXWB-bO5_lAhoM0mR2AU8IBv3764ZE7BjF3QBpo9xJ1MkNero-2vrCtYQ",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jcap_dvzw_fp",
+          "value": "Blf-iWjcvl-80MY_-O2BtyNYsQo5YhNNsTVuqi8ZMsMy2Ze8ZXtzsSMF90LDXp-BRbY2E90_Sj_Qe8G6FFoV6qDDRzg=",
+          "domain": ".m.jd.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "__jd_ref_cls",
+          "value": "MLoginRegister_SMSLogin",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "TrackerID",
+          "value": "2Y-Dh8dw9pES4xddUA2OEnDMy3Nru1zMU2E8bJ20dYF90cLBv4lS5Cv9yhZXChlP0kFBtTexHI4Z4vdqbsJ5UgZtMgMb19dReR-DJTv0MHT_cHgpqQPp5RCscK3Shotn",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_key",
+          "value": "AAJps2YSADDIlzWRhprhO5EjyefpIAa2ueUEHdlaxcd3_rYUIkCkZ4eC4LJBMUMlod8NjYC_d3E",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_pin",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_st",
+          "value": "1_qlIZINgNmvvS53Cqa_i6JyNyt8lCozG8Ax6yDev-hURhXvVOqLSwaVdTN3dRe7pqdAGoAxdUQWW3KNaN4vt-m47Hs4GtIdPv6Sxn1JHdPsYtxtGP-sIOrcOE9oXiuufUb5fPzPpSiWeEGP1tufOslIayEKruciUBqrs1nH3gYs8fSh_mc_PADnQwXxYl0FqORGUsHlZ0V3fsyVVHwKcwN6Wp9hVA",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pt_token",
+          "value": "tqi2e1do",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pwdt_id",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "s_key",
+          "value": "AAJps2YSADBu6NikRT1olHIqwUZdFIRgX7QCerzp0VqHKM4EE4mQ3HeCEmnqppwYMjgP5xO1Y2E",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "s_pin",
+          "value": "sxm1129",
+          "domain": ".plogin.m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sfstoken",
+          "value": "tk01mcec21beaa8sMSsyeDIrMjZrUu+Diynvvoq+FClwcgBARHKW4mECnVR0g+l+7RL8hbAr72B01zl6zuwzSO2JHHA/",
+          "domain": ".jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "whwswswws",
+          "value": "",
+          "domain": ".m.jd.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T12:55:19.030192",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T09:19:15.476968"
+    },
+    {
+      "id": "jd_browser_20260313",
+      "cookies": [
+        {
+          "name": "__jdu",
+          "value": "17708597386191696192951",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "o2State",
+          "value": "{%22webp%22:true%2C%22avif%22:true}",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "_tp",
+          "value": "FNPCghV%2Fvxj8JNaStoJ6Dg%3D%3D",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "shshshfpa",
+          "value": "28e4be47-554a-1df5-046a-143b3708ccc2-1770859765",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "shshshfpx",
+          "value": "28e4be47-554a-1df5-046a-143b3708ccc2-1770859765",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "areaId",
+          "value": "1",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "ipLoc-djd",
+          "value": "1-72-0-0",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "PCSYCityID",
+          "value": "CN_110000_110100_0",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "__jdv",
+          "value": "95931165%7Cwww.linkstars.com%7Ct_1000089893_157_0_184__b5b66bf8ab5faa25%7Ctuiguang%7Cbdef01ac52aa4227a720fce9810737fb%7C1773373223614",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "3AB9D23F7A4B3CSS",
+          "value": "jdd03ZFGEJ2SSE5WQTRQPCC6XYIQ7H63Y5TXKYVI2CPW57AGWJR3KUHCQVGKCOCARTUMAJH7A7SKC3VP6AHNFHNY6VNNPE4AAAAM44X7XYDQAAAAACE46JAPV56AVNYX",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "_gia_d",
+          "value": "1",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "wlfstk_smdl",
+          "value": "i2tg9b6ui743iqyaskpqhe2yzx4yjk62",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "3AB9D23F7A4B3C9B",
+          "value": "ZFGEJ2SSE5WQTRQPCC6XYIQ7H63Y5TXKYVI2CPW57AGWJR3KUHCQVGKCOCARTUMAJH7A7SKC3VP6AHNFHNY6VNNPE4",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "TrackID",
+          "value": "1hZdSqGUCoALev1ZBxQzljk5Jt2l2snKVyW2Imf8fpKQCWpsiEtzfyQrhJWdoG49eTUIqL4s5mUQ60kGXDpc-tg57IsoL1_EVP0COMxzAVD6AVQeQfVH_AsujWCWjn7JB",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "pinId",
+          "value": "XGrzS-kEZtY",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "pin",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "unick",
+          "value": "hmilystone",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "ceshi3.com",
+          "value": "201",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "__jda",
+          "value": "76161171.17708597386191696192951.1770859739.1773373223.1773385252.4",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "__jdc",
+          "value": "76161171",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "__jdb",
+          "value": "76161171.4.17708597386191696192951|4.1773385252",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "mail_times",
+          "value": "4%2C1%2C1773385271634",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "cn",
+          "value": "88",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "UseCorpPin",
+          "value": "sxm1129",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "sdtoken",
+          "value": "AAbEsBpEIOVjqTAKCQtvQu17f4p6JohgyooXVEu06nIR1f7feg0wodzUI2PFRjkgWJRwuDNSrCMt7zuG9nRGAN1GX1psmW865UDDMPTShm7PswSOZUO8FyWR80SEwpxaLnzVCq8",
+          "domain": ".jd.com",
+          "path": "/"
+        },
+        {
+          "name": "shshshfpb",
+          "value": "BApXWp1n35vlAEhBXpw3zQbajfUyMzn0YBjLEkEpo9xJ1Nc9DcNeHwEN-wMbzU-UdI-wO7vHeg8Q3I7o06a_Iir4l",
+          "domain": ".jd.com",
+          "path": "/"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T15:04:26.245079"
+    }
+  ],
+  "taobao": [
+    {
+      "id": "taobao_main",
+      "cookies": [
+        {
+          "name": "XSRF-TOKEN",
+          "value": "b5bb0081-fb6c-4c82-ae4c-c6d008cc433a",
+          "domain": "login.m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_samesite_flag_",
+          "value": "true",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie2",
+          "value": "10803585e18eb86aa33fe17c2a415059",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "t",
+          "value": "5143a476191fbc862f9b03beba5c2148",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_tb_token_",
+          "value": "f1b33e53f3538",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "3PcFlag",
+          "value": "1773366050678",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "arms_uid",
+          "value": "de0f840b-556e-4ba3-921a-6f30576bc952",
+          "domain": "login.m.taobao.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "_m_h5_tk",
+          "value": "925d786b9c561a12cb50098304969d54_1773375771017",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_m_h5_tk_enc",
+          "value": "11145c4d324d53353e715147422b2211",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cna",
+          "value": "I1k6IhlN0DECAT0wDpoJY1vw",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "xlly_s",
+          "value": "1",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "unb",
+          "value": "134701212",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sn",
+          "value": "",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc3",
+          "value": "id2=UoLYsOPrlht0&nk2=EEZruLGY%2FJ9a9kI%3D&vt3=F8dD29Zq1Svy8e1W3lU%3D&lg2=W5iHLLyFOGW7aA%3D%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc1",
+          "value": "existShop=false&cookie14=UoYZaZRbDlyMgQ%3D%3D&cookie15=V32FPkk%2Fw0dUvg%3D%3D&cookie21=Vq8l%2BKCLjA%2Bl",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "csg",
+          "value": "1b28df91",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "ultraCookieBase",
+          "value": "1k6S5%2BcxkgQpZVJ5N0ohkfiRICJkW8Xo%2Fu7neZmJSMWRetv6eXIWVje7TqklOT%2FSAa6XIRIPmtiL%2F91aZCAPPwgHFwkloV3ltlSL5peb7I6PXjQp%2Bza06nVnlKXwit5sQeNk8MzJlipnOkejvb3chojoHCDRXe3s0iVyTpfDdQ9J751MrtqHSCt4B2SocQxUquzFRORgNs6vF%2F%2BXkIjT%2B4i6scnldsYft7vSk854M%2F2m1vlUrEetWfavIQB2riQ16cl5tAs8Hy2Ql3UUx3UPH5YSzfw%3D%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lgc",
+          "value": "sxm19841129",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "ntm",
+          "value": "0",
+          "domain": ".m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cancelledSubSites",
+          "value": "empty",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie17",
+          "value": "UoLYsOPrlht0",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dnk",
+          "value": "sxm19841129",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "skt",
+          "value": "f72a41e3333714bd",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc4",
+          "value": "nk4=0%40Ep%2B8jpY05KaFyJVnbft1Z6pJemgwFw%3D%3D&id4=0%40UOruaQCgM240drMYtEhhLtwAuNo%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "tracknick",
+          "value": "sxm19841129",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_cc_",
+          "value": "WqG3DMC9EA%3D%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_l_g_",
+          "value": "Ug%3D%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sg",
+          "value": "922",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_nk_",
+          "value": "sxm19841129",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie1",
+          "value": "AiGcb9y46FIpHgD2TyLo%2FklfTg9qtA7CE41ILG5LWBQ%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "ockeqeudmj",
+          "value": "hZB%2FtOY%3D",
+          "domain": ".m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_w_tb_nick",
+          "value": "sxm19841129",
+          "domain": ".m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "munb",
+          "value": "134701212",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "WAPFDFDTGFG",
+          "value": "%2B4cMKKP%2B8PI%2BL8FlZOUtCOplvrgGVQ%3D%3D",
+          "domain": ".m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_w_app_lg",
+          "value": "0",
+          "domain": ".m.taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wk_cookie2",
+          "value": "1e2957c2b73dbebe7950c3ca13204666",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wk_unb",
+          "value": "UoLYsOPrlht0",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sgcookie",
+          "value": "E100duyDOzVfxqOsAKt%2BesslYcBGbQWvk5U8DP4amWX9tC%2FDS2AHTeIuuVdg7mUcJo8f1rw5ckrvInANKPMVMykx2B%2BkDCR8ZOOebJrZIdF2oUI%3D",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "last_slid_taobao_taobao_h5",
+          "value": "E86BF5D9C64BB196019C59",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "XSRF-TOKEN",
+          "value": "2c47a4a8-743a-466d-a6fe-184ca8a7bc22",
+          "domain": "pass.tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dnk",
+          "value": "sxm19841129",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc1",
+          "value": "existShop=false&cookie14=UoYZaZRbDlyMgQ%3D%3D&cookie15=V32FPkk%2Fw0dUvg%3D%3D&cookie21=Vq8l%2BKCLjA%2Bl",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc3",
+          "value": "id2=UoLYsOPrlht0&nk2=EEZruLGY%2FJ9a9kI%3D&vt3=F8dD29Zq1Svy8e1W3lU%3D&lg2=W5iHLLyFOGW7aA%3D%3D",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "tracknick",
+          "value": "sxm19841129",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_l_g_",
+          "value": "Ug%3D%3D",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uc4",
+          "value": "nk4=0%40Ep%2B8jpY05KaFyJVnbft1Z6pJemgwFw%3D%3D&id4=0%40UOruaQCgM240drMYtEhhLtwAuNo%3D",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "unb",
+          "value": "134701212",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "lgc",
+          "value": "sxm19841129",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie1",
+          "value": "AiGcb9y46FIpHgD2TyLo%2FklfTg9qtA7CE41ILG5LWBQ%3D",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "login",
+          "value": "true",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie17",
+          "value": "UoLYsOPrlht0",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cookie2",
+          "value": "10803585e18eb86aa33fe17c2a415059",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_nk_",
+          "value": "sxm19841129",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "cancelledSubSites",
+          "value": "empty",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sg",
+          "value": "922",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "t",
+          "value": "5143a476191fbc862f9b03beba5c2148",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "csg",
+          "value": "1b28df91",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "sn",
+          "value": "",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_tb_token_",
+          "value": "f1b33e53f3538",
+          "domain": ".tmall.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "isg",
+          "value": "BFBQBRiBDWBt2tFkkTL477ivIZiiGTRjFSMAhEohy6t-hfQv_Sl080m2WU1lVew7",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "tfstk",
+          "value": "gkboCbgEaKM_xvH4Sv87cAl1WurvPUTB293ppepU0KJX27sR9ibHn1PWekZ5KiXFh3pP-6gHT6WQNpF7D_1WReyTBT4ON_ZHrMy8HePFgedhGxgE-_1WRjGxLlIVNyVFFyRyTpPDuBAMaeoyTSc2TKuyT4RE3SAB3eRe4Hlq0BRi82JPLsPDOKJe8eWeuSAB3p8e8fLK0LBAnZyiijEV3IOVoQxkQ_qs82bmW3vNaK0UQZAudd5yn2ueQzCp06WUK2LNftbHb9anlUCG0ERlmWo2UhjPeI63S4JPo_7yeayxyL75gGQd3WueKiSwfLSbhytPfTIwmZeoldSVi6KccWiJpGOFdh_LC49PT1_1XF4ntIjGgEjzTmoalRuBgWQqADtyGIvtMpWW_FCNZgN0ic564IO4zSVmAiDs8VAUiSmZ53RXgDC..",
+          "domain": ".taobao.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T14:58:22.522343",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T09:41:18.937736"
+    }
+  ],
+  "pinduoduo": [
+    {
+      "id": "pinduoduo_20260313_092110",
+      "cookies": [
+        {
+          "name": "acid",
+          "value": "5effb56b20620aa9e346a856fddcf141",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/proxy/api/api/sigerus",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "api_uid",
+          "value": "Ck3dTWmzZohP5ACjJEmNAg==",
+          "domain": ".yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_nano_fp",
+          "value": "Xpm8XqXjn0C8X5XanT_3bhI3O7ZaBMNCv7yjw32V",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "webp",
+          "value": "1",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jrpl",
+          "value": "MS8TYVO7NXhbtKXqdUI5ZniBbX8WV0p0",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "njrpl",
+          "value": "MS8TYVO7NXhbtKXqdUI5ZniBbX8WV0p0",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dilx",
+          "value": "sqnb_2eeG8g8s1Z0xxsyT",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "PDDAccessToken",
+          "value": "NFUSFIEIDCTQVCOC6FDBHTKY4NXBHIRT6S7MVUBMOFUMMYBRCURA121ff7a",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pdd_user_id",
+          "value": "2013068799",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pdd_user_uin",
+          "value": "FVCEAZT7HRKEBLRGS3W2FDW34Y_GEXDA",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pdd_vds",
+          "value": "gaMLXyhaHNDoXEcmhmWivazPWErLrODGCQpbWnqyXLqihLpIYPfNhEfyWGDn",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T14:57:50.194006",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T09:21:40.142042"
+    }
+  ],
+  "douyin": [
+    {
+      "id": "douyin_20260313_092203",
+      "cookies": [
+        {
+          "name": "__ac_nonce",
+          "value": "069b366bd009aee239028",
+          "domain": "www.douyin.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "__ac_signature",
+          "value": "_02B4Z6wo00f01Cj5M3gAAIDCG2zFO-B1iRQoyTfAAGOT61",
+          "domain": "www.douyin.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "__ac_referer",
+          "value": "__ac_blank",
+          "domain": "www.douyin.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": false,
+          "sameSite": "None"
+        },
+        {
+          "name": "ttwid",
+          "value": "1%7CLcIUQoO8zUi8UNXTn9pM-fAvf8e78hPCd26LPij1K38%7C1773364925%7C5b694c99391cf6080ef450e536ab24db6cb00ff7b408ff96a4e9b0b90e838445",
+          "domain": ".douyin.com",
+          "path": "/",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "MONITOR_WEB_ID",
+          "value": "92267222-dfb7-45a3-bc57-db80bd3026ce",
+          "domain": ".www.douyin.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_tea_utm_cache_1243",
+          "value": "undefined",
+          "domain": ".www.douyin.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dy_swidth",
+          "value": "430",
+          "domain": "www.douyin.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dy_sheight",
+          "value": "932",
+          "domain": "www.douyin.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T09:29:44.803729",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T09:22:08.113146"
+    }
+  ],
+  "xiaohongshu": [
+    {
+      "id": "xiaohongshu_20260313_092248",
+      "cookies": [
+        {
+          "name": "acw_tc",
+          "value": "0a00d1a617733649699666309e6b57c0549b6b7b808acd7738c67cce84375c",
+          "domain": "www.xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "abRequestId",
+          "value": "92a84afa-0491-5cee-be99-14486134dea6",
+          "domain": ".xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "xsecappid",
+          "value": "ranchi",
+          "domain": ".xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "loadts",
+          "value": "1773364970202",
+          "domain": ".xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "a1",
+          "value": "19ce4ca02dd3zwli57spodf89fdmwd5ywfl8bxfg010000328341",
+          "domain": ".xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "webId",
+          "value": "4d4d7c63bffff024f4459fd6abef2877",
+          "domain": ".xiaohongshu.com",
+          "path": "/",
+          "secure": false,
+          "httpOnly": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "user_agent": "",
+      "status": "active",
+      "last_used": "2026-03-13T09:30:02.216159",
+      "fail_count": 0,
+      "harvested_at": "2026-03-13T09:22:54.262796"
+    }
+  ]
+}
