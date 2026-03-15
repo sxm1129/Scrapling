@@ -12,13 +12,17 @@ interface DashboardData {
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  taobao: "淘宝", tmall: "天猫", jd: "京东",
+  taobao: "淘宝", tmall: "天猫", jd_express: "京东秒送",
   pinduoduo: "拼多多", taobao_flash: "淘宝闪购",
+  douyin: "抖音", meituan_flash: "美团闪购", xiaohongshu: "小红书",
+  community_group: "社区团购", pupu: "朴朴超市", xiaoxiang: "小象超市", dingdong: "叮咚买菜",
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  taobao: "#ff6600", tmall: "#e4393c", jd: "#e1251b",
+  taobao: "#ff6600", tmall: "#e4393c", jd_express: "#e1251b",
   pinduoduo: "#e02e24", taobao_flash: "#ff4081",
+  douyin: "#111", meituan_flash: "#ffc107", xiaohongshu: "#fe2c55",
+  community_group: "#4caf50", pupu: "#1e88e5", xiaoxiang: "#ff9800", dingdong: "#43a047",
 };
 
 export default function DashboardPage() {

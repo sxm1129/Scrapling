@@ -108,12 +108,12 @@ class Config:
         """从环境变量加载配置 (优先级最高)"""
         config = cls()
 
-        # Storage
-        config.storage.mysql_host = os.getenv("PM_MYSQL_HOST", config.storage.mysql_host)
-        config.storage.mysql_port = int(os.getenv("PM_MYSQL_PORT", str(config.storage.mysql_port)))
-        config.storage.mysql_user = os.getenv("PM_MYSQL_USER", config.storage.mysql_user)
-        config.storage.mysql_password = os.getenv("PM_MYSQL_PASSWORD", config.storage.mysql_password)
-        config.storage.mysql_database = os.getenv("PM_MYSQL_DATABASE", config.storage.mysql_database)
+        # Storage — primary env var names match .env (DB_*), PM_MYSQL_* overrides
+        config.storage.mysql_host = os.getenv("PM_MYSQL_HOST", os.getenv("DB_HOST", config.storage.mysql_host))
+        config.storage.mysql_port = int(os.getenv("PM_MYSQL_PORT", os.getenv("DB_PORT", str(config.storage.mysql_port))))
+        config.storage.mysql_user = os.getenv("PM_MYSQL_USER", os.getenv("DB_USER", config.storage.mysql_user))
+        config.storage.mysql_password = os.getenv("PM_MYSQL_PASSWORD", os.getenv("DB_PASSWORD", config.storage.mysql_password))
+        config.storage.mysql_database = os.getenv("PM_MYSQL_DATABASE", os.getenv("DB_NAME", config.storage.mysql_database))
 
         config.storage.redis_host = os.getenv("PM_REDIS_HOST", config.storage.redis_host)
         config.storage.redis_port = int(os.getenv("PM_REDIS_PORT", str(config.storage.redis_port)))
