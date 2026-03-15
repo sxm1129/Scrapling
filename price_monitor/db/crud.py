@@ -2,11 +2,10 @@
 CRUD 操作 — 数据库读写封装
 """
 import hashlib
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import func, desc, and_
+from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
 
 from price_monitor.db.models import (

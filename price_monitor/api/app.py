@@ -11,13 +11,13 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from price_monitor.db.session import init_db, get_db, get_session_factory
+from price_monitor.db.session import init_db, get_db
 from price_monitor.db import crud
 from price_monitor.db.models import (
     OfferSnapshot, Violation, BaselinePrice,

@@ -3,9 +3,7 @@
 
 轻量封装: 将定时触发委托给 CollectionManager
 """
-import asyncio
 import logging
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
