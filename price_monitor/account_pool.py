@@ -62,12 +62,19 @@ class AccountPool:
             self._pool = {}
 
     def _save(self) -> None:
-        """保存账号池到文件"""
+        """保存账号池到文件 (带文件锁, 防止并发写入损坏)"""
+        import fcntl
         self.pool_file.parent.mkdir(parents=True, exist_ok=True)
-        self.pool_file.write_text(
-            json.dumps(self._pool, ensure_ascii=False, indent=2),
-            encoding="utf-8"
-        )
+        data = json.dumps(self._pool, ensure_ascii=False, indent=2)
+        try:
+            with open(self.pool_file, "w", encoding="utf-8") as f:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                try:
+                    f.write(data)
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        except OSError as e:
+            log.error(f"Failed to save account pool: {e}")
 
     def _auto_recover_cooldown(self, platform: str) -> None:
         """自动恢复超时 cooldown 账号"""

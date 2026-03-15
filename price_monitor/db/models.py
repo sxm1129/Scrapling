@@ -63,7 +63,7 @@ class Violation(Base):
     baseline_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     final_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     gap_value: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    gap_percent: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    gap_percent: Mapped[Decimal] = mapped_column(Numeric(8, 4))
     severity: Mapped[str] = mapped_column(String(5), nullable=False, index=True)
     is_whitelisted: Mapped[bool] = mapped_column(Boolean, default=False)
     shop_name: Mapped[Optional[str]] = mapped_column(String(100))

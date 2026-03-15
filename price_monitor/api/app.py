@@ -72,10 +72,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — production should restrict origins via CORS_ORIGINS env var
+_cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -98,13 +99,18 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ── 认证 ──
 
 def verify_auth(request: Request):
-    """简单密码认证 (一期)"""
+    """密码认证 — 写入操作强制校验"""
     auth = request.headers.get("Authorization", "")
     token = request.query_params.get("token", "")
     if auth == f"Bearer {ADMIN_PASSWORD}" or token == ADMIN_PASSWORD:
         return True
-    # 一期宽松: 允许所有请求 (Web 前端自带 token)
-    return True
+    return False
+
+
+def require_auth(request: Request):
+    """写入端点的认证依赖 — 校验失败返回 401"""
+    if not verify_auth(request):
+        raise HTTPException(401, "Authentication required")
 
 
 # ── Dashboard ──
@@ -189,14 +195,14 @@ def list_baselines(db: Session = Depends(get_db)):
 
 
 @app.post("/api/baselines")
-def create_baseline(data: BaselineCreate, db: Session = Depends(get_db)):
+def create_baseline(data: BaselineCreate, request: Request = None, db: Session = Depends(get_db), _=Depends(require_auth)):
     bp = crud.upsert_baseline(db, data.model_dump(exclude_none=True))
     db.commit()
     return _baseline_to_dict(bp)
 
 
 @app.delete("/api/baselines/{baseline_id}")
-def delete_baseline(baseline_id: int, db: Session = Depends(get_db)):
+def delete_baseline(baseline_id: int, db: Session = Depends(get_db), _=Depends(require_auth)):
     ok = crud.delete_baseline(db, baseline_id)
     if not ok:
         raise HTTPException(404, "Baseline not found")
@@ -213,14 +219,14 @@ def list_keywords(db: Session = Depends(get_db)):
 
 
 @app.post("/api/keywords")
-def add_keyword(data: KeywordCreate, db: Session = Depends(get_db)):
+def add_keyword(data: KeywordCreate, db: Session = Depends(get_db), _=Depends(require_auth)):
     kw = crud.add_keyword(db, data.keyword.strip(), data.priority)
     db.commit()
     return _keyword_to_dict(kw)
 
 
 @app.put("/api/keywords/{keyword_id}")
-def toggle_keyword(keyword_id: int, data: KeywordToggle, db: Session = Depends(get_db)):
+def toggle_keyword(keyword_id: int, data: KeywordToggle, db: Session = Depends(get_db), _=Depends(require_auth)):
     ok = crud.toggle_keyword(db, keyword_id, data.enabled)
     if not ok:
         raise HTTPException(404, "Keyword not found")
@@ -229,11 +235,12 @@ def toggle_keyword(keyword_id: int, data: KeywordToggle, db: Session = Depends(g
 
 
 @app.delete("/api/keywords/{keyword_id}")
-def delete_keyword(keyword_id: int, db: Session = Depends(get_db)):
+def delete_keyword(keyword_id: int, db: Session = Depends(get_db), _=Depends(require_auth)):
     kw = db.query(SearchKeyword).filter(SearchKeyword.id == keyword_id).first()
-    if kw:
-        db.delete(kw)
-        db.commit()
+    if not kw:
+        raise HTTPException(404, "Keyword not found")
+    db.delete(kw)
+    db.commit()
     return {"ok": True}
 
 
@@ -246,18 +253,19 @@ def list_whitelist(db: Session = Depends(get_db)):
 
 
 @app.post("/api/whitelist")
-def create_whitelist(data: WhitelistCreate, db: Session = Depends(get_db)):
+def create_whitelist(data: WhitelistCreate, db: Session = Depends(get_db), _=Depends(require_auth)):
     rule = crud.create_whitelist(db, data.model_dump(exclude_none=True))
     db.commit()
     return _whitelist_to_dict(rule)
 
 
 @app.delete("/api/whitelist/{rule_id}")
-def revoke_whitelist(rule_id: int, db: Session = Depends(get_db)):
+def revoke_whitelist(rule_id: int, db: Session = Depends(get_db), _=Depends(require_auth)):
     rule = db.query(WhitelistRule).filter(WhitelistRule.id == rule_id).first()
-    if rule:
-        rule.status = "REVOKED"
-        db.commit()
+    if not rule:
+        raise HTTPException(404, "Whitelist rule not found")
+    rule.status = "REVOKED"
+    db.commit()
     return {"ok": True}
 
 
@@ -270,7 +278,7 @@ def list_cookies(db: Session = Depends(get_db)):
 
 
 @app.post("/api/cookies")
-def save_cookies(data: CookieSave, db: Session = Depends(get_db)):
+def save_cookies(data: CookieSave, db: Session = Depends(get_db), _=Depends(require_auth)):
     ca = crud.save_cookies(db, data.platform, data.account_id, data.cookies)
     db.commit()
     return _cookie_to_dict(ca)
@@ -278,27 +286,34 @@ def save_cookies(data: CookieSave, db: Session = Depends(get_db)):
 
 # ── Export ──
 
+EXPORT_MAX_ROWS = int(os.getenv("EXPORT_MAX_ROWS", "50000"))
+
+
 @app.get("/api/export/violations")
 def export_violations(
     platform: str = None,
     severity: str = None,
+    page_size: int = Query(5000, ge=1, le=50000),
     db: Session = Depends(get_db),
 ):
     """导出违规数据为 JSON (Excel 导出在前端处理)"""
+    capped_size = min(page_size, EXPORT_MAX_ROWS)
     items, total = crud.list_violations(
         db, platform=platform, severity=severity,
-        page=1, page_size=10000,
+        page=1, page_size=capped_size,
     )
     return {
         "items": [_violation_to_dict(v) for v in items],
         "total": total,
+        "exported": len(items),
+        "capped": len(items) < total,
     }
 
 
 # ── 手动触发采集 (可选) ──
 
 @app.post("/api/scan/trigger")
-async def trigger_scan():
+async def trigger_scan(request: Request = None, _=Depends(require_auth)):
     """手动触发一轮采集"""
     import asyncio
     import threading

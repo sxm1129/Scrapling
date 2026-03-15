@@ -42,10 +42,12 @@ class MeituanFlashScraper(BaseScraper):
 
     async def scrape_product(self, task: ScrapeTask) -> Optional[ProductPrice]:
         """Tier-1: 通过 HTTP 请求抓取美团闪购商品页面"""
+        import asyncio
 
         try:
-            # 使用 Scrapling Fetcher 发送请求 (TLS 伪装为 Chrome)
-            page = Fetcher.get(
+            # 使用 asyncio.to_thread 包装同步 Fetcher, 避免阻塞事件循环
+            page = await asyncio.to_thread(
+                Fetcher.get,
                 task.product_url,
                 impersonate="chrome",
                 stealthy_headers=True,

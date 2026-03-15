@@ -110,8 +110,18 @@ class ProductPrice:
         return orjson.dumps(self.to_dict(), option=orjson.OPT_INDENT_2)
 
     def calculate_final_price(self) -> float:
-        """计算应用所有可用优惠券后的最终价格"""
+        """计算应用最优单张优惠券后的最终价格
+
+        策略: 电商平台通常不允许叠加所有优惠券, 取单张最优优惠。
+        分两类比较: 满减类取最大减额, 折扣类取最低折后价, 最终取两者中更低的。
+        """
         price = self.current_price
+        if price <= 0:
+            self.final_price = price
+            return price
+
+        best_threshold_saving = 0.0  # 满减类最优节省
+        best_discount_price = price  # 折扣类最优价格
 
         for coupon in self.coupons:
             if not coupon.is_claimable:
@@ -119,18 +129,24 @@ class ProductPrice:
 
             if coupon.coupon_type in (CouponType.STORE_COUPON, CouponType.PLATFORM_COUPON,
                                       CouponType.FULL_REDUCTION):
-                # 满减类: 满足门槛才减
-                if price >= coupon.threshold:
-                    price -= coupon.discount_value
+                # 满减类: 满足门槛才减, 取最大减额
+                if price >= coupon.threshold and coupon.discount_value > best_threshold_saving:
+                    best_threshold_saving = coupon.discount_value
             elif coupon.coupon_type in (CouponType.DIRECT_DISCOUNT, CouponType.TIME_LIMITED,
                                         CouponType.FLASH_SALE, CouponType.GROUP_BUY):
-                # 折扣类: discount_value 是折后价或折扣率
+                # 折扣类: discount_value 是折扣率(0<v<1) 或直降金额(v>0)
                 if 0 < coupon.discount_value < 1:
-                    price *= coupon.discount_value
+                    discounted = price * coupon.discount_value
                 elif coupon.discount_value > 0:
-                    price -= coupon.discount_value
+                    discounted = price - coupon.discount_value
+                else:
+                    continue
+                if discounted < best_discount_price:
+                    best_discount_price = discounted
 
-        self.final_price = max(price, 0)
+        # 取满减价和折扣价中更低的
+        threshold_price = price - best_threshold_saving
+        self.final_price = max(min(threshold_price, best_discount_price), 0)
         return self.final_price
 
 

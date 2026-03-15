@@ -21,7 +21,7 @@ from price_monitor.notify import notify_violation, notify_scan_summary, notify_c
 
 log = logging.getLogger(__name__)
 
-PLATFORMS = ["taobao", "tmall", "jd", "pinduoduo", "taobao_flash"]
+PLATFORMS = ["taobao", "tmall", "jd_express", "pinduoduo", "taobao_flash"]
 PAGES_PER_PLATFORM = int(os.getenv("PAGES_PER_PLATFORM", "20"))
 
 
@@ -68,16 +68,17 @@ async def run_scan_round():
                     log.error(f"  [{platform}] Scrape failed: {e}")
 
             if kw_offers:
-                # 批量写入 DB
+                # 批量写入 DB (获取 offer IDs)
                 session.add_all(kw_offers)
                 session.commit()
 
-                # 违规判定
+                # 违规判定 (process_offers 内部有自己的 commit)
                 violations = process_offers(session, kw_offers)
                 total_offers += len(kw_offers)
                 total_violations += len(violations)
 
-                # 飞书通知违规
+                # 飞书通知违规 — 隔离通知失败，确保 notified 状态正确持久化
+                notify_updates = False
                 for v in violations:
                     if not v.is_whitelisted:
                         if v.severity == "P0":
@@ -87,9 +88,15 @@ async def run_scan_round():
                         try:
                             notify_violation(v)
                             v.notified = True
+                            notify_updates = True
                         except Exception as e:
                             log.error(f"  Notify failed: {e}")
-                session.commit()
+                if notify_updates:
+                    try:
+                        session.commit()
+                    except Exception as e:
+                        session.rollback()
+                        log.error(f"  Notify status commit failed: {e}")
 
         duration = time.time() - start_time
 
@@ -145,7 +152,7 @@ async def _scrape_platform(platform: str, keyword: str, session) -> list[OfferSn
             url = f"https://list.tmall.com/search_product.htm?q={kw_enc}"
             products = await _fetch_with_js(pool, cookie_platform, url, keyword)
 
-        elif platform == "jd":
+        elif platform == "jd_express":
             cookie_platform = "jd_express"
             url = f"https://search.jd.com/Search?keyword={kw_enc}&enc=utf-8"
             products = await _fetch_with_js(pool, cookie_platform, url, keyword, init_url="https://www.jd.com/")

@@ -252,8 +252,10 @@ async def harvest_cookies(
                     try:
                         ua = ""
                         try:
-                            ua = context._options.get("user_agent", "")
-                        except AttributeError:
+                            # 避免访问 Playwright 私有属性 context._options
+                            # UA 仅用于日志记录, 不影响功能
+                            ua = getattr(page, "url", "")[:80] if page else ""
+                        except (AttributeError, TypeError):
                             pass
                         _save_to_pool(
                             pool_file=pool_file,

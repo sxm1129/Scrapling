@@ -17,6 +17,8 @@ log = logging.getLogger("price_monitor.pipeline")
 class DataPipeline:
     """数据处理管道 — 负责清洗、校验和持久化"""
 
+    MAX_BUFFER_SIZE = 10000  # 自动 flush 阈值, 防止内存无限增长
+
     def __init__(self, output_dir: str = "./output"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -64,6 +66,12 @@ class DataPipeline:
             f"[{processed.platform.value}] {processed.product_name} | "
             f"¥{processed.final_price:.2f} | {processed.shop_name} | {processed.ship_from_city}"
         )
+
+        # 自动 flush 防止内存溢出
+        if len(self._items) >= self.MAX_BUFFER_SIZE:
+            log.warning(f"Buffer reached {self.MAX_BUFFER_SIZE}, auto-flushing to disk")
+            self.flush_to_jsonl()
+
         return True
 
     def flush_to_jsonl(self, filename: Optional[str] = None) -> str:
