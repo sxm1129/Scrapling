@@ -153,9 +153,9 @@ class ProductPrice:
 @dataclass
 class ScrapeTask:
     """采集任务定义"""
-    task_id: str
     platform: Platform
     product_url: str
+    task_id: str = ""
     product_id: str = ""
     keyword: str = ""                # 搜索关键词 (搜索模式)
     city: str = ""                   # 定位城市 (O2O/前置仓)

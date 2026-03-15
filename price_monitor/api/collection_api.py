@@ -13,6 +13,7 @@ from price_monitor.db.session import get_db
 from price_monitor.db import crud
 from price_monitor.collection_manager import CollectionManager, _job_to_dict
 from price_monitor.scrapers.registry import list_supported_platforms
+from price_monitor.api.auth import require_auth
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/collection", tags=["collection"])
@@ -37,18 +38,6 @@ class TriggerSingleScrape(BaseModel):
     platform: str = Field(..., min_length=1, max_length=20)
     url: str = Field(..., min_length=10, max_length=500)
 
-
-# ── 认证依赖 ──
-
-def require_auth(request: Request):
-    """复用主 app 的认证逻辑"""
-    import os
-    password = os.getenv("ADMIN_PASSWORD", "kashi2026")
-    auth = request.headers.get("Authorization", "")
-    token = request.query_params.get("token", "")
-    if auth == f"Bearer {password}" or token == password:
-        return True
-    raise HTTPException(401, "Authentication required")
 
 
 # ── Endpoints ──

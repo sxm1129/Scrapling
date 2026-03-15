@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from price_monitor.db.session import get_db
 from price_monitor.cookie_manager import CookieManager
+from price_monitor.api.auth import require_auth
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cookie-mgmt", tags=["cookie-mgmt"])
@@ -23,18 +24,6 @@ def _get_manager() -> CookieManager:
     if _manager is None:
         _manager = CookieManager()
     return _manager
-
-
-# ── 认证 ──
-
-def require_auth(request: Request):
-    import os
-    password = os.getenv("ADMIN_PASSWORD", "kashi2026")
-    auth = request.headers.get("Authorization", "")
-    token = request.query_params.get("token", "")
-    if auth == f"Bearer {password}" or token == password:
-        return True
-    raise HTTPException(401, "Authentication required")
 
 
 # ── Pydantic ──

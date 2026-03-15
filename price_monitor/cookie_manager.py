@@ -142,14 +142,16 @@ class CookieManager:
             "checked_at": datetime.now(timezone.utc).isoformat(),
         }
 
-        # 获取 Cookie
-        account = self.pool.get_cookie(platform)
-        if not account:
+        # 获取 Cookie (只读, 不更新 last_used)
+        accounts = self.pool._pool.get(platform, [])
+        active_accounts = [a for a in accounts if a.get("status") == "active"]
+        if not active_accounts:
             result["detail"] = "无可用账号"
             return result
 
-        cookies = account["cookies"]
-        account_id = account["id"]
+        acc = active_accounts[0]
+        cookies = acc.get("cookies", [])
+        account_id = acc.get("id", "")
 
         # 方式 1: HTTP 探测 URL
         probe = VALIDATION_PROBES.get(platform)
@@ -240,15 +242,18 @@ class CookieManager:
                     if not account_id:
                         continue
 
-                    status = acc.get("status", "active").upper()
-                    if status == "ACTIVE":
-                        db_status = "ACTIVE"
-                    elif status == "INVALID":
-                        db_status = "EXPIRED"
-                    else:
-                        db_status = status.upper()
+                    # 先写入/更新 cookies
+                    ca = crud.save_cookies(session, platform, account_id, cookies)
 
-                    crud.save_cookies(session, platform, account_id, cookies)
+                    # 同步状态: accounts.json 的 status → DB
+                    pool_status = acc.get("status", "active").lower()
+                    if pool_status == "invalid":
+                        ca.status = "EXPIRED"
+                    elif pool_status == "cooldown":
+                        ca.status = "COOLDOWN"
+                    else:
+                        ca.status = "ACTIVE"
+
                     synced += 1
 
             session.commit()

@@ -347,7 +347,6 @@ def get_job(session: Session, job_id: int) -> Optional[ScrapeJob]:
 
 def get_latest_jobs_by_platform(session: Session) -> list[ScrapeJob]:
     """获取每个平台最近一次任务 (用于看板)"""
-    from sqlalchemy import distinct
     subq = session.query(
         ScrapeJob.platform,
         func.max(ScrapeJob.id).label("max_id"),

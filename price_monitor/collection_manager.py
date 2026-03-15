@@ -69,6 +69,7 @@ class CollectionManager:
             })
             session.commit()
             job_id = job.id
+            session.expunge(job)  # detach before close
         finally:
             session.close()
 
@@ -95,6 +96,7 @@ class CollectionManager:
             })
             session.commit()
             job_id = job.id
+            session.expunge(job)
         finally:
             session.close()
 
@@ -120,6 +122,7 @@ class CollectionManager:
             })
             session.commit()
             job_id = job.id
+            session.expunge(job)
         finally:
             session.close()
 
@@ -215,6 +218,7 @@ class CollectionManager:
             step = 0
             total_offers = 0
             total_violations = 0
+            total_fails = 0
             total_p0 = 0
             total_p1 = 0
 
@@ -235,6 +239,7 @@ class CollectionManager:
                         kw_offers.extend(offers)
                         log.info(f"  [{plat}] {len(offers)} offers")
                     except Exception as e:
+                        total_fails += 1
                         log.error(f"  [{plat}] Scrape failed: {e}")
 
                     # 更新进度
@@ -242,7 +247,7 @@ class CollectionManager:
                         session, job_id,
                         progress=progress,
                         success_items=total_offers + len(kw_offers),
-                        fail_items=0,
+                        fail_items=total_fails,
                         total_items=total_steps,
                     )
                     session.commit()
@@ -552,6 +557,10 @@ def _get_search_urls(platform: str, kw_enc: str) -> list[str]:
         "douyin": [f"https://haohuo.douyin.com/search?keyword={kw_enc}"],
         "meituan_flash": [f"https://h5.waimai.meituan.com/waimai/mindex/search/list?searchWord={kw_enc}"],
         "xiaohongshu": [f"https://www.xiaohongshu.com/search_result/?keyword={kw_enc}"],
+        "pupu": [f"https://j1.pupumall.com/search/items?keyword={kw_enc}"],
+        "xiaoxiang": [f"https://mall.meituan.com/search?keyword={kw_enc}"],
+        "dingdong": [f"https://maicai.api.ddxq.mobi/product/search?keyword={kw_enc}"],
+        "community_group": [f"https://mobile.yangkeduo.com/duo_cms_mall.html?search_key={kw_enc}"],
     }
     return mapping.get(platform, [])
 
