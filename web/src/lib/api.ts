@@ -1,5 +1,14 @@
 const BASE = '';
 
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const token = localStorage.getItem('admin_token') || '';
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
 export class APIError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -13,6 +22,7 @@ export async function fetchAPI(path: string, options?: RequestInit) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options?.headers,
     },
   });

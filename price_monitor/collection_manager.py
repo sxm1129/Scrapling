@@ -46,7 +46,7 @@ class CollectionManager:
             output_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
         )
         self.screenshot = PriceScreenshot(
-            save_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
+            output_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
         )
         self.account_pool = AccountPool(pool_file=ACCOUNTS_FILE)
 
