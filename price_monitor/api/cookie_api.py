@@ -5,11 +5,9 @@ Cookie 管理 API — RESTful 路由
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
-from price_monitor.db.session import get_db
 from price_monitor.cookie_manager import CookieManager
 from price_monitor.api.auth import require_auth
 
