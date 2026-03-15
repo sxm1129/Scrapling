@@ -244,7 +244,7 @@ class AccountPool:
             for c in cookies:
                 if isinstance(c, dict) and "name" in c and "value" in c:
                     result.append(c)
-            return result if result else cookies
+            return result
 
         if isinstance(cookies, dict):
             # 简单 dict {name: value}, 转为 list

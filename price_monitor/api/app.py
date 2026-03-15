@@ -26,8 +26,6 @@ from price_monitor.db.models import (
 
 log = logging.getLogger(__name__)
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "kashi2026")
-
 
 # ── Pydantic 请求模型 ──
 
@@ -104,21 +102,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 
-# ── 认证 ──
+# ── 认证 (统一使用 auth.py) ──
 
-def verify_auth(request: Request):
-    """密码认证 — 写入操作强制校验"""
-    auth = request.headers.get("Authorization", "")
-    token = request.query_params.get("token", "")
-    if auth == f"Bearer {ADMIN_PASSWORD}" or token == ADMIN_PASSWORD:
-        return True
-    return False
-
-
-def require_auth(request: Request):
-    """写入端点的认证依赖 — 校验失败返回 401"""
-    if not verify_auth(request):
-        raise HTTPException(401, "Authentication required")
+from price_monitor.api.auth import require_auth
 
 
 # ── Dashboard ──
@@ -318,21 +304,15 @@ def export_violations(
     }
 
 
-# ── 手动触发采集 (可选) ──
+# ── 手动触发采集 (委托给 CollectionManager) ──
 
 @app.post("/api/scan/trigger")
-async def trigger_scan(request: Request = None, _=Depends(require_auth)):
-    """手动触发一轮采集"""
-    import asyncio
-    import threading
-    from price_monitor.scheduler import run_scan_round
-    # 在后台线程中运行, 避免 uvicorn event loop 冲突
-    thread = threading.Thread(
-        target=lambda: asyncio.run(run_scan_round()),
-        daemon=True,
-    )
-    thread.start()
-    return {"status": "triggered"}
+async def trigger_scan(_=Depends(require_auth)):
+    """手动触发一轮采集 — 委托给 /api/collection/trigger"""
+    from price_monitor.collection_manager import CollectionManager
+    manager = CollectionManager()
+    job = await manager.start_full_scan(triggered_by="manual")
+    return {"status": "triggered", "job_id": job.id}
 
 
 # ── 序列化工具 ──
