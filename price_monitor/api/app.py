@@ -309,8 +309,8 @@ def export_violations(
 @app.post("/api/scan/trigger")
 async def trigger_scan(_=Depends(require_auth)):
     """手动触发一轮采集 — 委托给 /api/collection/trigger"""
-    from price_monitor.collection_manager import CollectionManager
-    manager = CollectionManager()
+    from price_monitor.api.collection_api import _get_manager
+    manager = _get_manager()
     job = await manager.start_full_scan(triggered_by="manual")
     return {"status": "triggered", "job_id": job.id}
 

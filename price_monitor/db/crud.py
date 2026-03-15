@@ -59,7 +59,7 @@ def list_offers(
     if platform:
         q = q.filter(OfferSnapshot.platform == platform)
     if keyword:
-        q = q.filter(OfferSnapshot.keyword == keyword)
+        q = q.filter(OfferSnapshot.keyword.contains(keyword))
     if shop_name:
         q = q.filter(OfferSnapshot.shop_name.contains(shop_name))
     if city:

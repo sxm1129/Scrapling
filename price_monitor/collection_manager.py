@@ -351,6 +351,7 @@ class CollectionManager:
 
             total_offers = 0
             total_violations = 0
+            total_fails = 0
             total_steps = max(len(keywords_objs), 1)
 
             for i, kw_obj in enumerate(keywords_objs):
@@ -367,13 +368,14 @@ class CollectionManager:
                         total_offers += len(offers)
                         total_violations += len(violations)
                 except Exception as e:
+                    total_fails += 1
                     log.error(f"[{platform}] keyword={kw} failed: {e}")
 
                 crud.update_job_progress(
                     session, job_id,
                     progress=int((i + 1) / total_steps * 100),
                     success_items=total_offers,
-                    fail_items=0,
+                    fail_items=total_fails,
                     total_items=total_steps,
                     violations_found=total_violations,
                 )
@@ -528,6 +530,12 @@ class CollectionManager:
         except (InvalidOperation, ValueError):
             final_price = raw_price
 
+        original_price = Decimal("0")
+        try:
+            original_price = Decimal(str(product.original_price)) if product.original_price else Decimal("0")
+        except (InvalidOperation, ValueError):
+            pass
+
         return OfferSnapshot(
             offer_hash=offer_hash,
             platform=platform,
@@ -539,7 +547,9 @@ class CollectionManager:
             ship_from_city=(product.ship_from_city or "")[:50],
             raw_price=raw_price,
             final_price=final_price,
+            original_price=original_price,
             coupon_info=[c.__dict__ for c in product.coupons] if product.coupons else None,
+            sales_volume=(product.sales_volume or "")[:50],
             confidence="HIGH",
             parse_status="OK",
             captured_at=now,
