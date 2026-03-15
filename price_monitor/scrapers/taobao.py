@@ -41,22 +41,43 @@ JS_EXTRACT_DATA = """() => {
     ).slice(0, 15);
 
     // 价格元素
-    const priceSelectors = [
-        "[class*='price']", "[class*='Price']",
-        "[class*='originPrice']", "[class*='realPrice']",
-        "em[class*='tb-rmb-num']", "[id*='J_PromoPriceNum']",
-        "span[class*='yuan']",
-    ];
-    const priceEls = document.querySelectorAll(priceSelectors.join(", "));
     result.price_elements = [];
     const seen = new Set();
-    priceEls.forEach(el => {
-        const text = el.innerText ? el.innerText.trim() : "";
-        if (text && text.length < 60 && /[0-9]/.test(text) && !seen.has(text)) {
-            seen.add(text);
-            result.price_elements.push({cls: el.className.substring(0, 60), text});
+    
+    // 首选策略: 直接探测天猫/淘宝全局应用上下文对象以获取 100% 准确的价格
+    try {
+        if (typeof window !== "undefined" && window.__ICE_APP_CONTEXT__) {
+            const ctx = window.__ICE_APP_CONTEXT__;
+            let exactPriceText = null;
+            if (ctx.pcTrade && ctx.pcTrade.pcBuyParams && ctx.pcTrade.pcBuyParams.current_price) {
+                exactPriceText = ctx.pcTrade.pcBuyParams.current_price.toString();
+            } else if (ctx.priceVO && ctx.priceVO.price && ctx.priceVO.price.priceText) {
+                exactPriceText = ctx.priceVO.price.priceText;
+            }
+            if (exactPriceText) {
+                seen.add(exactPriceText);
+                result.price_elements.push({cls: "ice_app_context", text: exactPriceText});
+            }
         }
-    });
+    } catch (e) { console.warn("Error parsing __ICE_APP_CONTEXT__", e); }
+
+    // 回退策略: DOM 扫描
+    if (result.price_elements.length === 0) {
+        const priceSelectors = [
+            "[class*='price']", "[class*='Price']",
+            "[class*='originPrice']", "[class*='realPrice']",
+            "em[class*='tb-rmb-num']", "[id*='J_PromoPriceNum']",
+            "span[class*='yuan']",
+        ];
+        const priceEls = document.querySelectorAll(priceSelectors.join(", "));
+        priceEls.forEach(el => {
+            const text = el.innerText ? el.innerText.trim() : "";
+            if (text && text.length < 60 && /[0-9]/.test(text) && !seen.has(text)) {
+                seen.add(text);
+                result.price_elements.push({cls: el.className.substring(0, 60), text});
+            }
+        });
+    }
 
     // 补充 span 搜索
     if (result.price_elements.length === 0) {
