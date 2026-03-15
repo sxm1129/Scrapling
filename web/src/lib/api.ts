@@ -113,4 +113,18 @@ export const api = {
     }),
   cancelJob: (id: number) => fetchAPI(`/api/collection/jobs/${id}`, { method: 'DELETE' }),
   getPlatforms: () => fetchAPI('/api/collection/platforms'),
+
+  // Cookie Lifecycle Management
+  getCookieStatus: () => fetchAPI('/api/cookie-mgmt/status'),
+  validateCookie: (platform: string) =>
+    fetchAPI(`/api/cookie-mgmt/validate/${platform}`, { method: 'POST' }),
+  validateAllCookies: () => fetchAPI('/api/cookie-mgmt/validate-all', { method: 'POST' }),
+  syncCookies: () => fetchAPI('/api/cookie-mgmt/sync', { method: 'POST' }),
+  deleteCookieAccount: (platform: string, accountId: string) =>
+    fetchAPI(`/api/cookie-mgmt/${platform}/${accountId}`, { method: 'DELETE' }),
+  updateCookieStatus: (platform: string, accountId: string, status: string) =>
+    fetchAPI(`/api/cookie-mgmt/${platform}/${accountId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
 };

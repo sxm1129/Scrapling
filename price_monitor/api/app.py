@@ -91,6 +91,10 @@ app.mount("/screenshots", StaticFiles(directory=screenshot_dir), name="screensho
 from price_monitor.api.collection_api import router as collection_router
 app.include_router(collection_router)
 
+# Cookie 管理路由
+from price_monitor.api.cookie_api import router as cookie_router
+app.include_router(cookie_router)
+
 
 # ── 全局异常处理 ──
 
