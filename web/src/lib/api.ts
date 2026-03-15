@@ -87,6 +87,30 @@ export const api = {
     return fetchAPI(`/api/export/violations${qs}`);
   },
 
-  // Scan trigger
-  triggerScan: () => fetchAPI('/api/scan/trigger', { method: 'POST' }),
+  // Scan trigger (legacy, kept for backward compat)
+  triggerScan: () => fetchAPI('/api/collection/trigger', { method: 'POST' }),
+
+  // Collection Management
+  getCollectionStatus: () => fetchAPI('/api/collection/status'),
+  getCollectionJobs: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/collection/jobs${qs}`);
+  },
+  getCollectionJob: (id: number) => fetchAPI(`/api/collection/jobs/${id}`),
+  triggerFullScan: (keyword?: string) => {
+    const qs = keyword ? `?keyword=${encodeURIComponent(keyword)}` : '';
+    return fetchAPI(`/api/collection/trigger${qs}`, { method: 'POST' });
+  },
+  triggerPlatformScan: (platform: string, keyword?: string) =>
+    fetchAPI(`/api/collection/trigger/${platform}`, {
+      method: 'POST',
+      body: JSON.stringify({ keyword: keyword || null }),
+    }),
+  triggerSingleScrape: (platform: string, url: string) =>
+    fetchAPI('/api/collection/scrape-url', {
+      method: 'POST',
+      body: JSON.stringify({ platform, url }),
+    }),
+  cancelJob: (id: number) => fetchAPI(`/api/collection/jobs/${id}`, { method: 'DELETE' }),
+  getPlatforms: () => fetchAPI('/api/collection/platforms'),
 };

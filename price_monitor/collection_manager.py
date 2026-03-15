@@ -1,0 +1,578 @@
+"""
+采集管理器 — 数据采集调度核心
+
+桥接调度器 / API → scraper registry → DB, 提供:
+  - 全量扫描 (FULL_SCAN)
+  - 单平台扫描 (PLATFORM_SCAN)
+  - 单 URL 采集 (SINGLE_URL)
+"""
+
+import asyncio
+import hashlib
+import logging
+import os
+import time
+from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from typing import Optional
+
+from price_monitor.db.session import get_session_factory
+from price_monitor.db.models import OfferSnapshot, ScrapeJob
+from price_monitor.db import crud
+from price_monitor.engine import process_offers
+from price_monitor.notify import notify_violation, notify_scan_summary
+from price_monitor.models import ProductPrice, ScrapeTask, Platform
+from price_monitor.config import Config
+from price_monitor.pipeline import DataPipeline
+from price_monitor.screenshot import PriceScreenshot
+from price_monitor.account_pool import AccountPool
+from price_monitor.scrapers.registry import create_scraper, list_supported_platforms
+
+log = logging.getLogger(__name__)
+
+# 运行中任务 (内存跟踪, 用于取消)
+_active_jobs: dict[int, bool] = {}  # job_id → cancelled flag
+
+ACCOUNTS_FILE = str(Path(__file__).resolve().parents[1] / "accounts.json")
+
+
+class CollectionManager:
+    """采集调度核心服务"""
+
+    def __init__(self):
+        self.config = Config.from_env()
+        self.pipeline = DataPipeline(
+            output_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
+        )
+        self.screenshot = PriceScreenshot(
+            save_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
+        )
+        self.account_pool = AccountPool(pool_file=ACCOUNTS_FILE)
+
+    # ── Public API ──
+
+    async def start_full_scan(
+        self,
+        keyword: str = None,
+        triggered_by: str = "manual",
+    ) -> ScrapeJob:
+        """启动全量扫描 (所有平台 × 所有关键词)"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.create_job(session, {
+                "job_type": "FULL_SCAN",
+                "keyword": keyword,
+                "triggered_by": triggered_by,
+                "status": "PENDING",
+            })
+            session.commit()
+            job_id = job.id
+        finally:
+            session.close()
+
+        # 在后台协程中执行
+        asyncio.ensure_future(self._run_full_scan(job_id, keyword))
+        return job
+
+    async def start_platform_scan(
+        self,
+        platform: str,
+        keyword: str = None,
+        triggered_by: str = "manual",
+    ) -> ScrapeJob:
+        """启动单平台扫描"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.create_job(session, {
+                "job_type": "PLATFORM_SCAN",
+                "platform": platform,
+                "keyword": keyword,
+                "triggered_by": triggered_by,
+                "status": "PENDING",
+            })
+            session.commit()
+            job_id = job.id
+        finally:
+            session.close()
+
+        asyncio.ensure_future(self._run_platform_scan(job_id, platform, keyword))
+        return job
+
+    async def start_single_scrape(
+        self,
+        platform: str,
+        url: str,
+        triggered_by: str = "manual",
+    ) -> ScrapeJob:
+        """启动单 URL 采集"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.create_job(session, {
+                "job_type": "SINGLE_URL",
+                "platform": platform,
+                "target_url": url,
+                "triggered_by": triggered_by,
+                "status": "PENDING",
+            })
+            session.commit()
+            job_id = job.id
+        finally:
+            session.close()
+
+        asyncio.ensure_future(self._run_single_scrape(job_id, platform, url))
+        return job
+
+    @staticmethod
+    def cancel_job(job_id: int) -> bool:
+        """取消运行中任务"""
+        if job_id in _active_jobs:
+            _active_jobs[job_id] = True  # set cancelled flag
+            return True
+        # 也尝试更新 DB 中的状态
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.get_job(session, job_id)
+            if job and job.status in ("PENDING", "RUNNING"):
+                crud.update_job_status(session, job_id, "CANCELLED")
+                session.commit()
+                return True
+            return False
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_job_status(job_id: int) -> Optional[dict]:
+        """获取单任务状态"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.get_job(session, job_id)
+            if not job:
+                return None
+            return _job_to_dict(job)
+        finally:
+            session.close()
+
+    @staticmethod
+    def list_platform_status() -> list[dict]:
+        """每平台最近任务 + 成功率 (看板用)"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            registered = list_supported_platforms()
+            latest_jobs = crud.get_latest_jobs_by_platform(session)
+            job_map = {j.platform: j for j in latest_jobs}
+
+            result = []
+            for p in registered:
+                job = job_map.get(p)
+                result.append({
+                    "platform": p,
+                    "last_job": _job_to_dict(job) if job else None,
+                    "registered": True,
+                })
+            return result
+        finally:
+            session.close()
+
+    # ── Internal execution ──
+
+    async def _run_full_scan(self, job_id: int, keyword: str = None):
+        """执行全量扫描"""
+        factory = get_session_factory()
+        session = factory()
+        _active_jobs[job_id] = False  # not cancelled
+        start_time = time.time()
+
+        try:
+            # 标记开始
+            crud.update_job_status(
+                session, job_id, "RUNNING",
+                started_at=datetime.now(timezone.utc),
+            )
+            session.commit()
+
+            # 获取关键词
+            keywords_objs = crud.get_active_keywords(session)
+            if keyword:
+                keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
+            if not keywords_objs:
+                crud.update_job_status(
+                    session, job_id, "SUCCESS",
+                    finished_at=datetime.now(timezone.utc),
+                    error_message="No active keywords found",
+                )
+                session.commit()
+                return
+
+            platforms = list_supported_platforms()
+            total_steps = len(keywords_objs) * len(platforms)
+            step = 0
+            total_offers = 0
+            total_violations = 0
+            total_p0 = 0
+            total_p1 = 0
+
+            for kw_obj in keywords_objs:
+                kw = kw_obj.keyword
+                log.info(f"[Job:{job_id}] Scanning keyword: {kw}")
+                kw_offers = []
+
+                for plat in platforms:
+                    if _active_jobs.get(job_id):
+                        raise asyncio.CancelledError("Job cancelled by user")
+
+                    step += 1
+                    progress = int(step / total_steps * 100)
+
+                    try:
+                        offers = await self._scrape_one(plat, kw, session)
+                        kw_offers.extend(offers)
+                        log.info(f"  [{plat}] {len(offers)} offers")
+                    except Exception as e:
+                        log.error(f"  [{plat}] Scrape failed: {e}")
+
+                    # 更新进度
+                    crud.update_job_progress(
+                        session, job_id,
+                        progress=progress,
+                        success_items=total_offers + len(kw_offers),
+                        fail_items=0,
+                        total_items=total_steps,
+                    )
+                    session.commit()
+
+                # 写入 DB + 违规判定
+                if kw_offers:
+                    session.add_all(kw_offers)
+                    session.commit()
+
+                    violations = process_offers(session, kw_offers)
+                    total_offers += len(kw_offers)
+                    total_violations += len(violations)
+
+                    # 通知
+                    for v in violations:
+                        if not v.is_whitelisted:
+                            if v.severity == "P0":
+                                total_p0 += 1
+                            elif v.severity == "P1":
+                                total_p1 += 1
+                            try:
+                                notify_violation(v)
+                                v.notified = True
+                            except Exception as e:
+                                log.error(f"  Notify failed: {e}")
+                    session.commit()
+
+            duration = time.time() - start_time
+
+            # 完成
+            crud.update_job_status(
+                session, job_id, "SUCCESS",
+                finished_at=datetime.now(timezone.utc),
+                total_items=total_offers,
+                success_items=total_offers,
+                violations_found=total_violations,
+                progress=100,
+            )
+            session.commit()
+
+            # 推送汇总
+            try:
+                notify_scan_summary(
+                    keyword=", ".join(k.keyword for k in keywords_objs[:3]),
+                    total_offers=total_offers,
+                    new_violations=total_violations,
+                    p0_count=total_p0,
+                    p1_count=total_p1,
+                    duration_sec=duration,
+                )
+            except Exception as e:
+                log.error(f"Summary notify failed: {e}")
+
+            log.info(
+                f"[Job:{job_id}] Full scan complete: "
+                f"{total_offers} offers, {total_violations} violations in {duration:.1f}s"
+            )
+
+        except asyncio.CancelledError:
+            crud.update_job_status(
+                session, job_id, "CANCELLED",
+                finished_at=datetime.now(timezone.utc),
+            )
+            session.commit()
+            log.info(f"[Job:{job_id}] Cancelled")
+
+        except Exception as e:
+            log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
+            try:
+                session.rollback()
+                crud.update_job_status(
+                    session, job_id, "FAILED",
+                    error_message=str(e)[:2000],
+                    finished_at=datetime.now(timezone.utc),
+                )
+                session.commit()
+            except Exception:
+                pass
+
+        finally:
+            _active_jobs.pop(job_id, None)
+            session.close()
+
+    async def _run_platform_scan(self, job_id: int, platform: str, keyword: str = None):
+        """执行单平台扫描"""
+        factory = get_session_factory()
+        session = factory()
+        _active_jobs[job_id] = False
+        start_time = time.time()
+
+        try:
+            crud.update_job_status(
+                session, job_id, "RUNNING",
+                started_at=datetime.now(timezone.utc),
+            )
+            session.commit()
+
+            keywords_objs = crud.get_active_keywords(session)
+            if keyword:
+                keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
+
+            total_offers = 0
+            total_violations = 0
+            total_steps = max(len(keywords_objs), 1)
+
+            for i, kw_obj in enumerate(keywords_objs):
+                if _active_jobs.get(job_id):
+                    raise asyncio.CancelledError()
+
+                kw = kw_obj.keyword
+                try:
+                    offers = await self._scrape_one(platform, kw, session)
+                    if offers:
+                        session.add_all(offers)
+                        session.commit()
+                        violations = process_offers(session, offers)
+                        total_offers += len(offers)
+                        total_violations += len(violations)
+                except Exception as e:
+                    log.error(f"[{platform}] keyword={kw} failed: {e}")
+
+                crud.update_job_progress(
+                    session, job_id,
+                    progress=int((i + 1) / total_steps * 100),
+                    success_items=total_offers,
+                    fail_items=0,
+                    total_items=total_steps,
+                    violations_found=total_violations,
+                )
+                session.commit()
+
+            crud.update_job_status(
+                session, job_id, "SUCCESS",
+                finished_at=datetime.now(timezone.utc),
+                total_items=total_offers,
+                success_items=total_offers,
+                violations_found=total_violations,
+                progress=100,
+            )
+            session.commit()
+
+        except asyncio.CancelledError:
+            crud.update_job_status(session, job_id, "CANCELLED",
+                                   finished_at=datetime.now(timezone.utc))
+            session.commit()
+        except Exception as e:
+            log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
+            try:
+                session.rollback()
+                crud.update_job_status(session, job_id, "FAILED",
+                                       error_message=str(e)[:2000],
+                                       finished_at=datetime.now(timezone.utc))
+                session.commit()
+            except Exception:
+                pass
+        finally:
+            _active_jobs.pop(job_id, None)
+            session.close()
+
+    async def _run_single_scrape(self, job_id: int, platform: str, url: str):
+        """执行单 URL 采集"""
+        factory = get_session_factory()
+        session = factory()
+        _active_jobs[job_id] = False
+
+        try:
+            crud.update_job_status(
+                session, job_id, "RUNNING",
+                started_at=datetime.now(timezone.utc),
+            )
+            session.commit()
+
+            # 使用注册表创建 scraper
+            plat_enum = Platform(platform)
+            scraper = create_scraper(
+                plat_enum, self.config, self.pipeline,
+                self.screenshot, self.account_pool,
+            )
+            task = ScrapeTask(
+                platform=plat_enum,
+                product_url=url,
+                keyword="",
+            )
+            result = await scraper.scrape_product(task)
+
+            total_items = 0
+            violations_count = 0
+
+            if result:
+                offer = self._product_to_offer(result, platform, "", url)
+                session.add(offer)
+                session.commit()
+                total_items = 1
+
+                violations = process_offers(session, [offer])
+                violations_count = len(violations)
+
+            crud.update_job_status(
+                session, job_id, "SUCCESS",
+                finished_at=datetime.now(timezone.utc),
+                total_items=total_items,
+                success_items=total_items,
+                violations_found=violations_count,
+                progress=100,
+            )
+            session.commit()
+
+        except Exception as e:
+            log.error(f"[Job:{job_id}] Single scrape failed: {e}", exc_info=True)
+            try:
+                session.rollback()
+                crud.update_job_status(session, job_id, "FAILED",
+                                       error_message=str(e)[:2000],
+                                       finished_at=datetime.now(timezone.utc))
+                session.commit()
+            except Exception:
+                pass
+        finally:
+            _active_jobs.pop(job_id, None)
+            session.close()
+
+    async def _scrape_one(
+        self, platform: str, keyword: str, session,
+    ) -> list[OfferSnapshot]:
+        """用注册表 scraper 采集单平台单关键词, 返回 OfferSnapshot 列表"""
+        try:
+            plat_enum = Platform(platform)
+        except ValueError:
+            log.warning(f"Unsupported platform: {platform}")
+            return []
+
+        try:
+            scraper = create_scraper(
+                plat_enum, self.config, self.pipeline,
+                self.screenshot, self.account_pool,
+            )
+        except ValueError as e:
+            log.warning(f"Scraper not available: {e}")
+            return []
+
+        # 构造搜索 URL (各平台不同)
+        from urllib.parse import quote
+        kw_enc = quote(keyword)
+        search_urls = _get_search_urls(platform, kw_enc)
+
+        offers = []
+        for url in search_urls:
+            task = ScrapeTask(platform=plat_enum, product_url=url, keyword=keyword)
+            try:
+                result = await scraper.scrape_product(task)
+                if result:
+                    offer = self._product_to_offer(result, platform, keyword, url)
+                    offers.append(offer)
+            except Exception as e:
+                log.warning(f"  [{platform}] scrape error for {url[:60]}: {e}")
+
+        return offers
+
+    @staticmethod
+    def _product_to_offer(
+        product: ProductPrice, platform: str, keyword: str, url: str,
+    ) -> OfferSnapshot:
+        """将 scraper 返回的 ProductPrice 转换为 OfferSnapshot"""
+        now = datetime.now(timezone.utc)
+        bucket = now.strftime("%Y%m%d%H")
+        raw = f"{platform}|{product.product_name or ''}|{product.shop_name or ''}|{bucket}"
+        offer_hash = hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+        raw_price = Decimal("0")
+        try:
+            raw_price = Decimal(str(product.current_price)) if product.current_price else Decimal("0")
+        except (InvalidOperation, ValueError):
+            pass
+
+        final_price = Decimal("0")
+        try:
+            final_price = Decimal(str(product.final_price)) if product.final_price else raw_price
+        except (InvalidOperation, ValueError):
+            final_price = raw_price
+
+        return OfferSnapshot(
+            offer_hash=offer_hash,
+            platform=platform,
+            keyword=keyword,
+            canonical_url=product.product_url or url,
+            product_name=(product.product_name or "")[:300],
+            product_id=product.product_id,
+            shop_name=(product.shop_name or "")[:100],
+            ship_from_city=(product.ship_from_city or "")[:50],
+            raw_price=raw_price,
+            final_price=final_price,
+            coupon_info=[c.__dict__ for c in product.coupons] if product.coupons else None,
+            confidence="HIGH",
+            parse_status="OK",
+            captured_at=now,
+        )
+
+
+def _get_search_urls(platform: str, kw_enc: str) -> list[str]:
+    """各平台搜索 URL 映射"""
+    mapping = {
+        "taobao": [f"https://s.taobao.com/search?q={kw_enc}"],
+        "tmall": [f"https://list.tmall.com/search_product.htm?q={kw_enc}"],
+        "jd_express": [f"https://search.jd.com/Search?keyword={kw_enc}&enc=utf-8"],
+        "pinduoduo": [f"https://mobile.yangkeduo.com/search_result.html?search_key={kw_enc}"],
+        "taobao_flash": [f"https://s.m.taobao.com/h5?q={kw_enc}&tab=sg"],
+        "douyin": [f"https://haohuo.douyin.com/search?keyword={kw_enc}"],
+        "meituan_flash": [f"https://h5.waimai.meituan.com/waimai/mindex/search/list?searchWord={kw_enc}"],
+        "xiaohongshu": [f"https://www.xiaohongshu.com/search_result/?keyword={kw_enc}"],
+    }
+    return mapping.get(platform, [])
+
+
+def _job_to_dict(job: ScrapeJob) -> dict:
+    """ScrapeJob → API JSON"""
+    return {
+        "id": job.id,
+        "job_type": job.job_type,
+        "platform": job.platform,
+        "keyword": job.keyword,
+        "target_url": job.target_url,
+        "status": job.status,
+        "progress": job.progress,
+        "total_items": job.total_items,
+        "success_items": job.success_items,
+        "fail_items": job.fail_items,
+        "violations_found": job.violations_found,
+        "error_message": job.error_message,
+        "triggered_by": job.triggered_by,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "finished_at": job.finished_at.isoformat() if job.finished_at else None,
+        "created_at": job.created_at.isoformat() if job.created_at else None,
+    }

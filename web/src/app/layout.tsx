@@ -5,6 +5,7 @@ import "./globals.css";
 
 const NAV_ITEMS = [
   { href: "/", label: "看板", icon: "📊" },
+  { href: "/collection", label: "采集管理", icon: "🔄" },
   { href: "/violations", label: "违规管理", icon: "🚨" },
   { href: "/baselines", label: "基准价", icon: "💰" },
   { href: "/keywords", label: "关键词", icon: "🔍" },

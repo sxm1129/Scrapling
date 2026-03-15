@@ -136,3 +136,36 @@ class CookieAccount(Base):
     __table_args__ = (
         UniqueConstraint("platform", "account_id", name="uk_platform_account"),
     )
+
+
+class ScrapeJob(Base):
+    """采集任务跟踪"""
+    __tablename__ = "scrape_jobs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    job_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, comment="FULL_SCAN | PLATFORM_SCAN | SINGLE_URL"
+    )
+    platform: Mapped[Optional[str]] = mapped_column(String(20), index=True)
+    keyword: Mapped[Optional[str]] = mapped_column(String(100))
+    target_url: Mapped[Optional[str]] = mapped_column(String(500))
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="PENDING", index=True,
+        comment="PENDING | RUNNING | SUCCESS | FAILED | CANCELLED",
+    )
+    progress: Mapped[int] = mapped_column(Integer, default=0, comment="0-100")
+    total_items: Mapped[int] = mapped_column(Integer, default=0)
+    success_items: Mapped[int] = mapped_column(Integer, default=0)
+    fail_items: Mapped[int] = mapped_column(Integer, default=0)
+    violations_found: Mapped[int] = mapped_column(Integer, default=0)
+    error_message: Mapped[Optional[str]] = mapped_column(Text)
+    triggered_by: Mapped[str] = mapped_column(
+        String(20), default="manual", comment="scheduler | manual | api"
+    )
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index("idx_job_status_time", "status", "created_at"),
+    )

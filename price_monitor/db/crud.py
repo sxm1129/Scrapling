@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from price_monitor.db.models import (
     OfferSnapshot, Violation, BaselinePrice,
-    SearchKeyword, WhitelistRule, CookieAccount,
+    SearchKeyword, WhitelistRule, CookieAccount, ScrapeJob,
 )
 
 
@@ -274,3 +274,86 @@ def get_dashboard_stats(session: Session) -> dict:
         "platform_distribution": {p: c for p, c in platform_dist},
         "severity_distribution": {s: c for s, c in severity_dist},
     }
+
+
+# ── ScrapeJob ──
+
+
+def create_job(session: Session, data: dict) -> ScrapeJob:
+    """创建采集任务"""
+    job = ScrapeJob(**data)
+    session.add(job)
+    session.flush()
+    return job
+
+
+def update_job_status(
+    session: Session, job_id: int, status: str, **kwargs,
+) -> Optional[ScrapeJob]:
+    """更新任务状态 (可附带 error_message, finished_at 等)"""
+    job = session.query(ScrapeJob).filter(ScrapeJob.id == job_id).first()
+    if not job:
+        return None
+    job.status = status
+    for k, v in kwargs.items():
+        if hasattr(job, k):
+            setattr(job, k, v)
+    session.flush()
+    return job
+
+
+def update_job_progress(
+    session: Session, job_id: int,
+    progress: int, success_items: int, fail_items: int,
+    total_items: int = None, violations_found: int = None,
+) -> None:
+    """更新任务进度 (高频调用, 只更新必要字段)"""
+    updates = {
+        "progress": progress,
+        "success_items": success_items,
+        "fail_items": fail_items,
+    }
+    if total_items is not None:
+        updates["total_items"] = total_items
+    if violations_found is not None:
+        updates["violations_found"] = violations_found
+    session.query(ScrapeJob).filter(ScrapeJob.id == job_id).update(updates)
+
+
+def list_jobs(
+    session: Session,
+    platform: str = None,
+    status: str = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[ScrapeJob], int]:
+    """查询任务列表"""
+    q = session.query(ScrapeJob)
+    if platform:
+        q = q.filter(ScrapeJob.platform == platform)
+    if status:
+        q = q.filter(ScrapeJob.status == status)
+    total = q.count()
+    items = q.order_by(desc(ScrapeJob.created_at)).offset(
+        (page - 1) * page_size
+    ).limit(page_size).all()
+    return items, total
+
+
+def get_job(session: Session, job_id: int) -> Optional[ScrapeJob]:
+    """获取单个任务"""
+    return session.query(ScrapeJob).filter(ScrapeJob.id == job_id).first()
+
+
+def get_latest_jobs_by_platform(session: Session) -> list[ScrapeJob]:
+    """获取每个平台最近一次任务 (用于看板)"""
+    from sqlalchemy import distinct
+    subq = session.query(
+        ScrapeJob.platform,
+        func.max(ScrapeJob.id).label("max_id"),
+    ).filter(ScrapeJob.platform.isnot(None)).group_by(ScrapeJob.platform).subquery()
+
+    return session.query(ScrapeJob).join(
+        subq, ScrapeJob.id == subq.c.max_id,
+    ).all()
+
