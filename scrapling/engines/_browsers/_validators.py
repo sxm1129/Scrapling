@@ -87,6 +87,7 @@ class PlaywrightConfig(Struct, kw_only=True, frozen=False, weakref=True):
     useragent: Optional[str] = None
     extra_flags: Optional[List[str]] = None
     blocked_domains: Optional[Set[str]] = None
+    intercept_url_pattern: Optional[str] = None
     retries: RetriesCount = 3
     retry_delay: Seconds = 1
 
@@ -150,6 +151,7 @@ class _fetch_params:
     network_idle: bool
     load_dom: bool
     blocked_domains: Optional[Set[str]]
+    intercept_url_pattern: Optional[str]
     solve_cloudflare: bool
     selector_config: Dict
 
@@ -190,6 +192,7 @@ def validate_fetch(
     # solve_cloudflare defaults to False for models that don't have it (PlaywrightConfig)
     result.setdefault("solve_cloudflare", False)
     result.setdefault("blocked_domains", None)
+    result.setdefault("intercept_url_pattern", None)
 
     return _fetch_params(**result)
 

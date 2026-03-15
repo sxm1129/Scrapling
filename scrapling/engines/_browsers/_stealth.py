@@ -227,8 +227,16 @@ class StealthySession(SyncSession, StealthySessionMixin):
                 params.timeout, params.extra_headers, params.disable_resources, proxy, params.blocked_domains
             ) as page_info:
                 final_response = [None]
+                intercepted_response = [None]
                 page = page_info.page
-                page.on("response", self._create_response_handler(page_info, final_response))
+                default_handler = self._create_response_handler(page_info, final_response)
+
+                def combined_handler(res):
+                    default_handler(res)
+                    if params.intercept_url_pattern and re_compile(params.intercept_url_pattern).search(res.url):
+                        intercepted_response[0] = res
+
+                page.on("response", combined_handler)
 
                 try:
                     first_response = page.goto(url, referer=referer)
@@ -258,8 +266,18 @@ class StealthySession(SyncSession, StealthySessionMixin):
 
                     page.wait_for_timeout(params.wait)
 
+                    meta_dict = {"proxy": proxy}
+                    if intercepted_response[0]:
+                        try:
+                            meta_dict["intercepted_json"] = intercepted_response[0].json()
+                        except Exception:
+                            try:
+                                meta_dict["intercepted_text"] = intercepted_response[0].text()
+                            except Exception:
+                                pass
+
                     response = ResponseFactory.from_playwright_response(
-                        page, first_response, final_response[0], params.selector_config, meta={"proxy": proxy}
+                        page, first_response, final_response[0], params.selector_config, meta=meta_dict
                     )
                     return response
 
@@ -481,8 +499,16 @@ class AsyncStealthySession(AsyncSession, StealthySessionMixin):
                 params.timeout, params.extra_headers, params.disable_resources, proxy, params.blocked_domains
             ) as page_info:
                 final_response = [None]
+                intercepted_response = [None]
                 page = page_info.page
-                page.on("response", self._create_response_handler(page_info, final_response))
+                default_handler = self._create_response_handler(page_info, final_response)
+
+                async def combined_handler(res):
+                    await default_handler(res)
+                    if params.intercept_url_pattern and re_compile(params.intercept_url_pattern).search(res.url):
+                        intercepted_response[0] = res
+
+                page.on("response", combined_handler)
 
                 try:
                     first_response = await page.goto(url, referer=referer)
@@ -512,8 +538,18 @@ class AsyncStealthySession(AsyncSession, StealthySessionMixin):
 
                     await page.wait_for_timeout(params.wait)
 
+                    meta_dict = {"proxy": proxy}
+                    if intercepted_response[0]:
+                        try:
+                            meta_dict["intercepted_json"] = await intercepted_response[0].json()
+                        except Exception:
+                            try:
+                                meta_dict["intercepted_text"] = await intercepted_response[0].text()
+                            except Exception:
+                                pass
+
                     response = await ResponseFactory.from_async_playwright_response(
-                        page, first_response, final_response[0], params.selector_config, meta={"proxy": proxy}
+                        page, first_response, final_response[0], params.selector_config, meta=meta_dict
                     )
                     return response
 

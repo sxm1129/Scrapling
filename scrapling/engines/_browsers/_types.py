@@ -90,6 +90,7 @@ class PlaywrightSession(TypedDict, total=False):
     useragent: Optional[str]
     extra_flags: Optional[List[str]]
     blocked_domains: Optional[Set[str]]
+    intercept_url_pattern: Optional[str]
     retries: int
     retry_delay: int | float
 
@@ -107,6 +108,7 @@ class PlaywrightFetchParams(TypedDict, total=False):
     extra_headers: Optional[Dict[str, str]]
     wait_selector_state: SelectorWaitStates
     blocked_domains: Optional[Set[str]]
+    intercept_url_pattern: Optional[str]
     proxy: Optional[str | Dict[str, str]]
 
 
