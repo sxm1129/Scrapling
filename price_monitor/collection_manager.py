@@ -68,6 +68,7 @@ class CollectionManager:
                 "status": "PENDING",
             })
             session.commit()
+            session.refresh(job)  # load server-default columns (created_at etc.)
             job_id = job.id
             session.expunge(job)  # detach before close
         finally:
@@ -95,6 +96,7 @@ class CollectionManager:
                 "status": "PENDING",
             })
             session.commit()
+            session.refresh(job)
             job_id = job.id
             session.expunge(job)
         finally:
@@ -121,6 +123,7 @@ class CollectionManager:
                 "status": "PENDING",
             })
             session.commit()
+            session.refresh(job)
             job_id = job.id
             session.expunge(job)
         finally:
