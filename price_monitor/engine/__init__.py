@@ -30,9 +30,10 @@ def match_baseline(product_name: str, baselines: list[BaselinePrice]) -> Optiona
 
     for bp in baselines:
         pattern = bp.product_pattern.lower()
-        # 精确包含
-        if pattern in product_lower:
-            score = len(pattern)  # 越长的匹配越精确
+        # 严格包含所有关键词 (按空格切分)
+        keywords = pattern.split()
+        if keywords and all(kw in product_lower for kw in keywords):
+            score = len(pattern)  # 越长的模式包含信息越多
             if score > best_score:
                 best_score = score
                 best_match = bp

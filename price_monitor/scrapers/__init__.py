@@ -10,7 +10,6 @@ from typing import Optional
 
 from price_monitor.models import ProductPrice, ScrapeTask, Platform
 from price_monitor.config import Config, PlatformConfig
-from price_monitor.pipeline import DataPipeline
 from price_monitor.screenshot import PriceScreenshot
 from price_monitor.account_pool import AccountPool
 
@@ -25,12 +24,10 @@ class BaseScraper(ABC):
     def __init__(
         self,
         config: Config,
-        pipeline: DataPipeline,
         screenshot: PriceScreenshot,
         account_pool: Optional[AccountPool] = None,
     ):
         self.config = config
-        self.pipeline = pipeline
         self.screenshot = screenshot
         self.account_pool = account_pool
         self._platform_config: PlatformConfig = config.platforms.get(
@@ -57,42 +54,7 @@ class BaseScraper(ABC):
         """
         raise NotImplementedError
 
-    async def run_task(self, task: ScrapeTask) -> bool:
-        """执行采集任务 (含错误处理和限速)"""
-        log.info(f"[{self.platform.value}] Scraping: {task.product_url}")
 
-        try:
-            result = await self.scrape_product(task)
-            if result:
-                return self.pipeline.save_item(result)
-            else:
-                log.warning(f"[{self.platform.value}] No result for: {task.product_url}")
-                return False
-
-        except Exception as e:
-            log.error(f"[{self.platform.value}] Error scraping {task.product_url}: {e}", exc_info=True)
-            return False
-
-        finally:
-            # 请求间隔
-            await asyncio.sleep(self.delay)
-
-    async def run_batch(self, tasks: list[ScrapeTask]) -> dict:
-        """批量执行采集任务
-
-        :return: {"success": int, "failed": int, "total": int}
-        """
-        success, failed = 0, 0
-
-        for task in tasks:
-            if await self.run_task(task):
-                success += 1
-            else:
-                failed += 1
-
-        result = {"success": success, "failed": failed, "total": len(tasks)}
-        log.info(f"[{self.platform.value}] Batch complete: {result}")
-        return result
 
     def _get_cookies(self) -> Optional[dict]:
         """从账号池获取 Cookie"""

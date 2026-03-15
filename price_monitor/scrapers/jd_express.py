@@ -162,12 +162,11 @@ class JDExpressScraper(BaseScraper):
 
             # 截图
             try:
-                screenshot_dir = self.screenshot.output_dir
-                os.makedirs(str(screenshot_dir), exist_ok=True)
-                path = str(screenshot_dir / f"jd_{sku_id}.png")
-                await page.screenshot(path=path)
-                screenshot_path = path
-                log.info(f"Screenshot saved: {path}")
+                screenshot_path = await self.screenshot.capture_full_page(
+                    page, 
+                    filename=f"jd_{sku_id}.png",
+                    context_str=f"JD Express | SKU: {sku_id}"
+                )
             except Exception as e:
                 log.error(f"Screenshot error: {e}")
 
@@ -385,3 +384,217 @@ class JDExpressScraper(BaseScraper):
             )
 
         return None
+
+    async def scrape_search(self, keyword: str, max_items: int = 5) -> list["ProductPrice"]:
+        """通过京东移动端搜索页采集搜索结果列表
+
+        使用 StealthyFetcher + Cookie 渲染 so.m.jd.com/ware/search.action，
+        通过 JS 提取搜索结果卡片中的商品数据。
+        """
+        from urllib.parse import quote
+        from datetime import datetime, timezone
+
+        kw_enc = quote(keyword)
+        search_url = f"https://so.m.jd.com/ware/search.action?keyword={kw_enc}"
+        results = []
+
+        JS_JD_SEARCH = """() => {
+            const items = [];
+
+            // 1. 尝试点掉可能出现的弹窗（移动设备提示 QR / App 下载）
+            const closeButtons = document.querySelectorAll(
+                "[class*='close'], [class*='modal-close'], [class*='dialog'] button, [class*='popup'] button"
+            );
+            for (const btn of closeButtons) {
+                const t = btn.innerText || "";
+                if (t.includes("取消") || t.includes("关闭") || t.includes("X") || t.includes("×")) {
+                    try { btn.click(); } catch(e) {}
+                }
+            }
+
+            // 2. 尝试 DOM 卡片选择
+            const selectors = [
+                "ul.m-goods-list > li", "ul.goods-list > li", "ul[class*='goods'] > li",
+                "[class*='m-goods-item']", "[class*='search-goods'] li",
+                "[class*='m-search-item']", "[class*='search-item']",
+                "[data-sku]", "[class*='goods-item']",
+            ];
+            let cards = [];
+            for (const sel of selectors) {
+                const found = document.querySelectorAll(sel);
+                if (found.length > 1) { cards = Array.from(found); break; }
+            }
+            // 降级: 取含 ¥ 和商品链接的 li 元素
+            if (cards.length === 0) {
+                cards = Array.from(document.querySelectorAll("li")).filter(el => {
+                    const t = el.innerText || "";
+                    return t.length > 10 && t.length < 800 &&
+                        (t.includes("¥") || t.includes("￥")) &&
+                        el.querySelector("a");
+                }).slice(0, 20);
+            }
+
+            for (const card of cards.slice(0, 10)) {
+                const text = card.innerText || "";
+                if (!text.trim()) continue;
+                let sku_id = card.getAttribute("data-sku") || card.getAttribute("data-skuid") || "";
+                if (!sku_id) {
+                    const links = card.querySelectorAll("a");
+                    for (const a of links) {
+                        const m = (a.getAttribute("href") || "").match(/\/product\/(\d+)|goods_id=(\d+)|(?:id|skuid)=(\d+)/);
+                        if (m) { sku_id = m[1] || m[2] || m[3] || ""; if (sku_id) break; }
+                    }
+                }
+                let price = "";
+                const priceEl = card.querySelector(
+                    ".m-price, [class*='price'][class*='cur'], [class*='price-now'], strong.price, [class*='Price']"
+                ) || card.querySelector("[class*='price'], strong");
+                if (priceEl) price = priceEl.innerText.trim().replace(/[^0-9.]/g, "");
+                let title = "";
+                const titleEl = card.querySelector(
+                    "[class*='goods-title'], [class*='sku-name'], [class*='title'], [class*='name'], h3, h2"
+                );
+                if (titleEl) title = titleEl.innerText.trim().slice(0, 120);
+                if (!price && !title) continue;
+                items.push({ sku_id, price, title });
+            }
+
+            // 3. 如果 DOM 取不到, 做文本行解析 (备用)
+            let text_items = [];
+            if (items.length === 0) {
+                const bodyText = document.body.innerText || "";
+                const lines = bodyText.split("\\n").map(l => l.trim()).filter(Boolean);
+                let cur = { title: "", price: "", sku_id: "" };
+                for (const line of lines) {
+                    if ((line.includes("¥") || line.includes("￥")) && /\d+\.?\d*/.test(line)) {
+                        const pm = line.match(/(\d+\.?\d*)/);
+                        if (pm && cur.price === "") cur.price = pm[1];
+                    } else if (line.length > 8 && line.length < 150 && !line.includes("评价") &&
+                               !line.includes("筛选") && !line.includes("综合") && /[\u4e00-\u9fa5]/.test(line)) {
+                        if (cur.title && cur.price) {
+                            text_items.push({ ...cur });
+                            cur = { title: line, price: "", sku_id: "" };
+                        } else {
+                            cur.title = line;
+                        }
+                    }
+                }
+                if (cur.title && cur.price) text_items.push(cur);
+                // 提取链接中的 sku_id
+                const allLinks = document.querySelectorAll("a[href*='item.m.jd.com'], a[href*='/product/']");
+                const skuIds = Array.from(allLinks).map(a => {
+                    const m = a.href.match(/\/product\/(\d+)/);
+                    return m ? m[1] : "";
+                }).filter(Boolean);
+                for (let i = 0; i < text_items.length && i < skuIds.length; i++) {
+                    text_items[i].sku_id = skuIds[i];
+                }
+            }
+
+            return {
+                items: items.length > 0 ? items : text_items,
+                url: window.location.href,
+                is_login: window.location.href.includes("passport.jd.com"),
+                total_text: document.body.innerText.slice(0, 600)
+            };
+        }"""
+
+        extracted: dict = {}
+
+        async def page_action(page):
+            nonlocal extracted
+            # 等待商品列表加载
+            try:
+                await page.wait_for_selector(
+                    "li, [class*='goods'], [class*='search'], [class*='price']",
+                    timeout=12000
+                )
+            except Exception:
+                pass
+            await page.wait_for_timeout(2000)
+            
+            # 强力关闭弹窗和遮罩（特别是二维码）
+            try:
+                await page.add_style_tag(content="""
+                    [class*='modal'], [class*='mask'], [class*='dialog'], [class*='popup'], [class*='qrcode'] {
+                        display: none !important; opacity: 0 !important; pointer-events: none !important; z-index: -999 !important;
+                    }
+                """)
+                await page.evaluate("""() => {
+                    const btns = document.querySelectorAll('[class*="close"], [class*="modal"] button');
+                    for (const b of btns) {
+                        const t = b.innerText || "";
+                        if (t.includes("取消") || t.includes("关闭") || t.includes("×") || t.includes("X")) b.click();
+                    }
+                }""")
+            except Exception:
+                pass
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(500)
+            try:
+                extracted = await page.evaluate(JS_JD_SEARCH)
+            except Exception as e:
+                log.error(f"[JD Search] JS eval error: {e}")
+
+
+        cookies = None
+        account_id = None
+        if self.account_pool:
+            account = self.account_pool.get_cookie(self.platform.value)
+            if account:
+                cookies = account["cookies"]
+                account_id = account["id"]
+                log.info(f"[JD Search] Using Cookie: {account_id} ({len(cookies)} cookies)")
+
+        try:
+            fetch_kwargs = {
+                "headless": self.config.scraping.headless,  # Was hardcoded to False, leading to Linux crashes
+                "network_idle": True,
+                "google_search": True,
+                "page_action": page_action,
+                "timeout": self.config.scraping.browser_timeout,
+            }
+            if cookies:
+                fetch_kwargs["cookies"] = cookies
+            await StealthyFetcher.async_fetch(search_url, **fetch_kwargs)
+        except Exception as e:
+            log.error(f"[JD Search] Fetch error: {e}")
+            return []
+
+        if extracted.get("is_login"):
+            log.warning(f"[JD Search] Redirected to login. Cookie may be expired.")
+            return []
+
+        items = extracted.get("items", [])
+        if not items:
+            log.warning(f"[JD Search] No items extracted. URL={extracted.get('url')} "
+                        f"Text: {extracted.get('total_text','')[:200]}")
+            return []
+
+        for item in items[:max_items]:
+            sku_id = item.get("sku_id", "")
+            title = item.get("title", "").strip()
+            price_str = item.get("price", "")
+
+            price = 0.0
+            try:
+                price = float(re.sub(r"[^\d.]", "", price_str)) if price_str else 0.0
+            except ValueError:
+                pass
+
+            if not title:
+                continue
+
+            product = ProductPrice(
+                platform=self.platform,
+                product_id=sku_id or title[:20],
+                product_name=title,
+                current_price=price,
+                final_price=price,
+                product_url=f"https://item.m.jd.com/product/{sku_id}.html" if sku_id else search_url,
+                scraped_at=datetime.now(timezone.utc).isoformat(),
+            )
+            results.append(product)
+            log.info(f"[JD Search] {title[:40]} | ¥{price:.2f}")
+
+        return results

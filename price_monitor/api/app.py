@@ -60,6 +60,21 @@ async def lifespan(app: FastAPI):
     """启动时初始化数据库"""
     log.info("Initializing database...")
     init_db()
+    
+    from price_monitor.db.session import get_session_factory
+    from price_monitor.db import crud
+    
+    factory = get_session_factory()
+    session = factory()
+    try:
+        count = crud.fail_stale_jobs(session)
+        if count > 0:
+            log.warning(f"Failed {count} stale jobs left from previous run.")
+    except Exception as e:
+        log.error(f"Failed to recover stale jobs: {e}")
+    finally:
+        session.close()
+        
     log.info("Database ready.")
     yield
 
@@ -123,6 +138,7 @@ def list_offers(
     keyword: str = None,
     shop_name: str = None,
     city: str = None,
+    sort_by: str = Query("time_desc", pattern="^(time_desc|price_asc|price_desc)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
@@ -130,6 +146,7 @@ def list_offers(
     items, total = crud.list_offers(
         db, platform=platform, keyword=keyword,
         shop_name=shop_name, city=city,
+        sort_by=sort_by,
         page=page, page_size=page_size,
     )
     return {
@@ -336,8 +353,8 @@ def _offer_to_dict(o: OfferSnapshot) -> dict:
         "screenshot_path": o.screenshot_path,
         "screenshot_hash": o.screenshot_hash,
         "parse_status": o.parse_status,
-        "captured_at": o.captured_at.isoformat() if o.captured_at else None,
-        "created_at": o.created_at.isoformat() if o.created_at else None,
+        "captured_at": o.captured_at.isoformat() + "Z" if o.captured_at else None,
+        "created_at": o.created_at.isoformat() + "Z" if o.created_at else None,
     }
 
 
@@ -370,7 +387,7 @@ def _baseline_to_dict(b: BaselinePrice) -> dict:
         "baseline_price": float(b.baseline_price or 0),
         "note": b.note,
         "updated_by": b.updated_by,
-        "updated_at": b.updated_at.isoformat() if b.updated_at else None,
+        "updated_at": b.updated_at.isoformat() + "Z" if b.updated_at else None,
     }
 
 
@@ -380,7 +397,7 @@ def _keyword_to_dict(k: SearchKeyword) -> dict:
         "keyword": k.keyword,
         "enabled": k.enabled,
         "priority": k.priority,
-        "created_at": k.created_at.isoformat() if k.created_at else None,
+        "created_at": k.created_at.isoformat() + "Z" if k.created_at else None,
     }
 
 
@@ -392,9 +409,9 @@ def _whitelist_to_dict(w: WhitelistRule) -> dict:
         "platform": w.platform,
         "reason": w.reason,
         "approved_by": w.approved_by,
-        "expires_at": w.expires_at.isoformat() if w.expires_at else None,
+        "expires_at": w.expires_at.isoformat() + "Z" if w.expires_at else None,
         "status": w.status,
-        "created_at": w.created_at.isoformat() if w.created_at else None,
+        "created_at": w.created_at.isoformat() + "Z" if w.created_at else None,
     }
 
 
@@ -405,7 +422,7 @@ def _cookie_to_dict(c: CookieAccount) -> dict:
         "account_id": c.account_id,
         "status": c.status,
         "cookie_count": len(c.cookies) if isinstance(c.cookies, list) else 0,
-        "last_used": c.last_used.isoformat() if c.last_used else None,
-        "expired_at": c.expired_at.isoformat() if c.expired_at else None,
-        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "last_used": c.last_used.isoformat() + "Z" if c.last_used else None,
+        "expired_at": c.expired_at.isoformat() + "Z" if c.expired_at else None,
+        "created_at": c.created_at.isoformat() + "Z" if c.created_at else None,
     }

@@ -132,7 +132,7 @@ class AccountPool:
         log.info(f"Added account {account_id} for {platform} ({len(normalized)} cookies)")
 
     def get_cookie(self, platform: str) -> Optional[dict]:
-        """获取一个可用账号信息 (随机轮换)
+        """获取一个可用账号信息 (优先选择有强身份验证 Cookie 的账号)
 
         :return: {"id": ..., "cookies": [...], "user_agent": ...} 或 None
         """
@@ -145,14 +145,30 @@ class AccountPool:
             log.warning(f"No active accounts for {platform}")
             return None
 
-        selected = random.choice(active)
+        # 关键 auth Cookie 名称 (各平台)
+        AUTH_KEYS = {"pt_key", "pt_pin", "unb", "_tb_token_", "token", "sessionid",
+                     "auth_token", "access_token", "COOKIE_LOGIN_USER", "mall_login_token"}
+
+        def _auth_strength(acc: dict) -> int:
+            """返回账号 auth Cookie 数量 (越高越好)"""
+            cookies = acc.get("cookies", [])
+            if isinstance(cookies, list):
+                return sum(1 for c in cookies if c.get("name") in AUTH_KEYS)
+            return 0
+
+        # 按 auth 强度排序, 优先选强度最高的
+        active_sorted = sorted(active, key=_auth_strength, reverse=True)
+        # 在前 N 个强账号里随机 (避免固定选同一个)
+        top = [a for a in active_sorted if _auth_strength(a) >= _auth_strength(active_sorted[0])]
+        import random
+        selected = random.choice(top)
         selected["last_used"] = datetime.now().isoformat()
         self._save()
 
         return {
             "id": selected["id"],
             "cookies": selected["cookies"],
-            "user_agent": selected["user_agent"],
+            "user_agent": selected.get("user_agent", ""),
         }
 
     def get_playwright_cookies(self, platform: str) -> Optional[list[dict]]:

@@ -62,6 +62,13 @@ export default function CookiesPage() {
     } catch (e) { handleError(e, "删除"); }
   };
 
+  const handleHarvest = async (platform: string) => {
+    try {
+      await api.harvestCookie(platform);
+      alert(`已为 ${platform} 启动采集器窗口。请在弹出的新终端和浏览器中完成登录，然后回此页面点击“同步到 DB”。`);
+    } catch (e) { handleError(e, "启动采集器"); }
+  };
+
   // 统计
   const totalAccounts = platforms.reduce((s, p) => s + p.account_count, 0);
   const activeAccounts = platforms.reduce((s, p) => s + p.active_count, 0);
@@ -120,6 +127,13 @@ export default function CookiesPage() {
                       {p.active_count}/{p.account_count}
                     </span>
                   )}
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: "2px 6px", fontSize: "0.625rem", background: "#2196f322", color: "#2196f3" }}
+                    onClick={(e) => { e.stopPropagation(); handleHarvest(p.platform); }}
+                  >
+                    启动采集
+                  </button>
                   <button
                     className="btn btn-ghost"
                     style={{ padding: "2px 6px", fontSize: "0.625rem" }}

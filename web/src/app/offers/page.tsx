@@ -20,6 +20,7 @@ export default function OffersPage() {
   const [platform, setPlatform] = useState("");
   const [keyword, setKeyword] = useState("");
   const [shopName, setShopName] = useState("");
+  const [sortBy, setSortBy] = useState("time_desc");
 
   // Detail modal
   const [detail, setDetail] = useState<any | null>(null);
@@ -34,6 +35,7 @@ export default function OffersPage() {
       if (platform) params.platform = platform;
       if (keyword) params.keyword = keyword;
       if (shopName) params.shop_name = shopName;
+      if (sortBy) params.sort_by = sortBy;
 
       const res = await api.getOffers(params);
       setOffers(res.items || []);
@@ -42,7 +44,7 @@ export default function OffersPage() {
       handleError(e, "加载采集数据");
     }
     setLoading(false);
-  }, [page, platform, keyword, shopName]);
+  }, [page, platform, keyword, shopName, sortBy]);
 
   useEffect(() => { fetchOffers(); }, [fetchOffers]);
 
@@ -50,7 +52,7 @@ export default function OffersPage() {
 
   const handleSearch = () => { setPage(1); fetchOffers(); };
   const handleReset = () => {
-    setPlatform(""); setKeyword(""); setShopName(""); setPage(1);
+    setPlatform(""); setKeyword(""); setShopName(""); setSortBy("time_desc"); setPage(1);
   };
 
   return (
@@ -77,6 +79,17 @@ export default function OffersPage() {
           {Object.entries(PLATFORM_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
+        </select>
+        
+        <select
+          className="input"
+          style={{ width: 140 }}
+          value={sortBy}
+          onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+        >
+          <option value="time_desc">最新采集</option>
+          <option value="price_asc">价格从低到高</option>
+          <option value="price_desc">价格从高到低</option>
         </select>
 
         <input
@@ -217,15 +230,24 @@ export default function OffersPage() {
                   </a>
                 } />
               )}
-              {detail.screenshot_path && (
-                <DetailRow label="截图" value={
-                  <a href={`/screenshots/${detail.screenshot_path.split('/').pop()}`} target="_blank" rel="noreferrer"
-                     style={{ color: "var(--accent-blue)" }}>
-                    查看截图
-                  </a>
+              {detail.screenshot_hash && (
+                <DetailRow label="证据链Hash" value={
+                  <span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "var(--text-muted)", wordBreak: "break-all" }}>
+                    {detail.screenshot_hash}
+                  </span>
                 } />
               )}
             </div>
+            {detail.screenshot_path && (
+              <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                <span style={{ color: "var(--text-muted)", fontWeight: 500, fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}>页面防篡改截图</span>
+                <img 
+                  src={`/screenshots/${detail.screenshot_path.split('/').pop()}`} 
+                  alt="Scrape Evidence Screenshot" 
+                  style={{ width: "100%", borderRadius: 6, border: "1px solid var(--border-color)" }} 
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

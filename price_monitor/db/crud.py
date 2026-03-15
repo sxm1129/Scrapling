@@ -51,6 +51,7 @@ def list_offers(
     city: str = None,
     start_time: datetime = None,
     end_time: datetime = None,
+    sort_by: str = "time_desc",
     page: int = 1,
     page_size: int = 50,
 ) -> tuple[list[OfferSnapshot], int]:
@@ -70,7 +71,16 @@ def list_offers(
         q = q.filter(OfferSnapshot.captured_at <= end_time)
 
     total = q.count()
-    items = q.order_by(desc(OfferSnapshot.captured_at)).offset((page - 1) * page_size).limit(page_size).all()
+
+    if sort_by == "price_asc":
+        q = q.order_by(OfferSnapshot.final_price.asc(), desc(OfferSnapshot.id))
+    elif sort_by == "price_desc":
+        q = q.order_by(OfferSnapshot.final_price.desc(), desc(OfferSnapshot.id))
+    else:
+        # Default: time_desc
+        q = q.order_by(desc(OfferSnapshot.captured_at), desc(OfferSnapshot.id))
+
+    items = q.offset((page - 1) * page_size).limit(page_size).all()
     return items, total
 
 
@@ -337,6 +347,25 @@ def list_jobs(
         (page - 1) * page_size
     ).limit(page_size).all()
     return items, total
+
+
+def fail_stale_jobs(session: Session) -> int:
+    """清理异常中断的僵尸任务 (服务器重启时调用)"""
+    stale_jobs = session.query(ScrapeJob).filter(
+        ScrapeJob.status.in_(["PENDING", "RUNNING"])
+    ).all()
+    
+    count = 0
+    now = datetime.now(timezone.utc)
+    for j in stale_jobs:
+        j.status = "FAILED"
+        j.error_message = "Server restarted abruptly"
+        j.finished_at = now
+        count += 1
+        
+    if count > 0:
+        session.commit()
+    return count
 
 
 def get_job(session: Session, job_id: int) -> Optional[ScrapeJob]:

@@ -24,7 +24,6 @@ from price_monitor.engine import process_offers
 from price_monitor.notify import notify_violation, notify_scan_summary
 from price_monitor.models import ProductPrice, ScrapeTask, Platform
 from price_monitor.config import Config
-from price_monitor.pipeline import DataPipeline
 from price_monitor.screenshot import PriceScreenshot
 from price_monitor.account_pool import AccountPool
 from price_monitor.scrapers.registry import create_scraper, list_supported_platforms
@@ -42,9 +41,6 @@ class CollectionManager:
 
     def __init__(self):
         self.config = Config.from_env()
-        self.pipeline = DataPipeline(
-            output_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
-        )
         self.screenshot = PriceScreenshot(
             output_dir=os.getenv("SCREENSHOT_DIR", "./data/screenshots"),
         )
@@ -231,7 +227,8 @@ class CollectionManager:
                 kw_offers = []
 
                 for plat in platforms:
-                    if _active_jobs.get(job_id):
+                    job_record = crud.get_job(session, job_id)
+                    if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
                         raise asyncio.CancelledError("Job cancelled by user")
 
                     step += 1
@@ -358,7 +355,8 @@ class CollectionManager:
             total_steps = max(len(keywords_objs), 1)
 
             for i, kw_obj in enumerate(keywords_objs):
-                if _active_jobs.get(job_id):
+                job_record = crud.get_job(session, job_id)
+                if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
                     raise asyncio.CancelledError()
 
                 kw = kw_obj.keyword
@@ -428,7 +426,7 @@ class CollectionManager:
             # 使用注册表创建 scraper
             plat_enum = Platform(platform)
             scraper = create_scraper(
-                plat_enum, self.config, self.pipeline,
+                plat_enum, self.config,
                 self.screenshot, self.account_pool,
             )
             task = ScrapeTask(
@@ -486,19 +484,36 @@ class CollectionManager:
 
         try:
             scraper = create_scraper(
-                plat_enum, self.config, self.pipeline,
+                plat_enum, self.config,
                 self.screenshot, self.account_pool,
             )
         except ValueError as e:
             log.warning(f"Scraper not available: {e}")
             return []
 
-        # 构造搜索 URL (各平台不同)
         from urllib.parse import quote
         kw_enc = quote(keyword)
         search_urls = _get_search_urls(platform, kw_enc)
 
         offers = []
+
+        # ── 优先路径: scrape_search() 返回多商品列表 ──
+        if hasattr(scraper, "scrape_search"):
+            try:
+                products = await scraper.scrape_search(keyword, max_items=5)
+                for product in products:
+                    offer = self._product_to_offer(product, platform, keyword, product.product_url)
+                    offers.append(offer)
+                if offers:
+                    log.info(f"[{platform}] scrape_search() returned {len(offers)} offers for '{keyword}'")
+                    return offers
+                else:
+                    log.warning(f"[{platform}] scrape_search() returned 0 results, "
+                                f"falling back to product page scraping (url count: {len(search_urls)})")
+            except Exception as e:
+                log.error(f"[{platform}] scrape_search() failed: {e}", exc_info=True)
+
+        # ── 降级路径: 逐 URL 调用 scrape_product() ──
         for url in search_urls:
             task = ScrapeTask(platform=plat_enum, product_url=url, keyword=keyword)
             try:
@@ -539,6 +554,16 @@ class CollectionManager:
         except (InvalidOperation, ValueError):
             pass
 
+        screenshot_path = product.screenshot_local
+        screenshot_hash = None
+        if screenshot_path and os.path.exists(screenshot_path):
+            try:
+                with open(screenshot_path, "rb") as f:
+                    file_hash = hashlib.sha256(f.read()).hexdigest()
+                screenshot_hash = file_hash
+            except Exception as e:
+                log.error(f"Failed to calculate hash for screenshot: {e}")
+
         return OfferSnapshot(
             offer_hash=offer_hash,
             platform=platform,
@@ -556,24 +581,32 @@ class CollectionManager:
             confidence="HIGH",
             parse_status="OK",
             captured_at=now,
+            screenshot_path=screenshot_path,
+            screenshot_hash=screenshot_hash,
         )
 
 
 def _get_search_urls(platform: str, kw_enc: str) -> list[str]:
-    """各平台搜索 URL 映射"""
+    """各平台搜索 URL 映射
+
+    使用移动端 URL，与 Cookie 采集时的域名保持一致（m.jd.com / m.taobao.com）。
+    """
     mapping = {
-        "taobao": [f"https://s.taobao.com/search?q={kw_enc}"],
-        "tmall": [f"https://list.tmall.com/search_product.htm?q={kw_enc}"],
-        "jd_express": [f"https://search.jd.com/Search?keyword={kw_enc}&enc=utf-8"],
+        # ── 移动端搜索页，Cookie 域匹配 ──
+        "jd_express": [f"https://so.m.jd.com/ware/search.action?keyword={kw_enc}"],
+        "taobao": [f"https://s.m.taobao.com/search?q={kw_enc}"],
+        "tmall": [f"https://s.m.taobao.com/search?q={kw_enc}&tab=tmall"],
         "pinduoduo": [f"https://mobile.yangkeduo.com/search_result.html?search_key={kw_enc}"],
+        # ── 淘宝闪购：m 端搜索 + tab=sg，TaobaoFlashScraper 负责 API 拦截 ──
         "taobao_flash": [f"https://s.m.taobao.com/h5?q={kw_enc}&tab=sg"],
-        "douyin": [f"https://haohuo.douyin.com/search?keyword={kw_enc}"],
-        "meituan_flash": [f"https://h5.waimai.meituan.com/waimai/mindex/search/list?searchWord={kw_enc}"],
-        "xiaohongshu": [f"https://www.xiaohongshu.com/search_result/?keyword={kw_enc}"],
-        "pupu": [f"https://j1.pupumall.com/search/items?keyword={kw_enc}"],
-        "xiaoxiang": [f"https://mall.meituan.com/search?keyword={kw_enc}"],
-        "dingdong": [f"https://maicai.api.ddxq.mobi/product/search?keyword={kw_enc}"],
-        "community_group": [f"https://mobile.yangkeduo.com/duo_cms_mall.html?search_key={kw_enc}"],
+        # ── 其余平台 Cookie 未采集，使用 fallback 单品 URL ──
+        "douyin": ["https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891"],
+        "meituan_flash": ["https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485"],
+        "xiaohongshu": ["https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1"],
+        "pupu": ["https://j1.pupumall.com/share/product?productId=100435"],
+        "xiaoxiang": ["https://mall.meituan.com/product/58102"],
+        "dingdong": ["https://maicai.api.ddxq.mobi/product/detail?product_id=89234"],
+        "community_group": ["https://mobile.yangkeduo.com/goods.html?goods_id=452179836"],
     }
     return mapping.get(platform, [])
 
@@ -594,7 +627,7 @@ def _job_to_dict(job: ScrapeJob) -> dict:
         "violations_found": job.violations_found,
         "error_message": job.error_message,
         "triggered_by": job.triggered_by,
-        "started_at": job.started_at.isoformat() if job.started_at else None,
-        "finished_at": job.finished_at.isoformat() if job.finished_at else None,
-        "created_at": job.created_at.isoformat() if job.created_at else None,
+        "started_at": job.started_at.isoformat() + "Z" if job.started_at else None,
+        "finished_at": job.finished_at.isoformat() + "Z" if job.finished_at else None,
+        "created_at": job.created_at.isoformat() + "Z" if job.created_at else None,
     }

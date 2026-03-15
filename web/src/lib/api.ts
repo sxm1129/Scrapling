@@ -49,7 +49,24 @@ export function handleError(e: unknown, context?: string): void {
   const prefix = context ? `${context}: ` : '';
   console.error(prefix, e);
   if (typeof window !== 'undefined') {
-    alert(`${prefix}${msg}`);
+    const toast = document.createElement('div');
+    toast.textContent = `${prefix}${msg}`;
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.backgroundColor = '#ef4444';
+    toast.style.color = 'white';
+    toast.style.padding = '12px 24px';
+    toast.style.borderRadius = '8px';
+    toast.style.zIndex = '9999';
+    toast.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    toast.style.transition = 'opacity 0.3s ease';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 }
 
@@ -137,4 +154,6 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ status }),
     }),
+  harvestCookie: (platform: string) =>
+    fetchAPI(`/api/cookie-mgmt/harvest/${platform}`, { method: 'POST' }),
 };

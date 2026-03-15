@@ -8,7 +8,6 @@ from typing import Optional
 
 from price_monitor.models import Platform
 from price_monitor.config import Config
-from price_monitor.pipeline import DataPipeline
 from price_monitor.screenshot import PriceScreenshot
 from price_monitor.account_pool import AccountPool
 from price_monitor.scrapers import BaseScraper
@@ -19,7 +18,6 @@ log = logging.getLogger("price_monitor.scrapers.registry")
 def create_scraper(
     platform: Platform,
     config: Config,
-    pipeline: DataPipeline,
     screenshot: PriceScreenshot,
     account_pool: Optional[AccountPool] = None,
 ) -> BaseScraper:
@@ -27,7 +25,6 @@ def create_scraper(
 
     :param platform: 目标平台
     :param config: 全局配置
-    :param pipeline: 数据管道
     :param screenshot: 截图引擎
     :param account_pool: Cookie/账号池 (可选)
     :return: BaseScraper 实例
@@ -38,7 +35,7 @@ def create_scraper(
         raise ValueError(f"Unsupported platform: {platform.value}")
 
     return scraper_cls(
-        config=config, pipeline=pipeline,
+        config=config,
         screenshot=screenshot, account_pool=account_pool,
     )
 

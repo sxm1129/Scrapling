@@ -1,0 +1,319 @@
+/Users/hs/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:     Started server process [98657]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55370 - "POST /api/cookie-mgmt/sync HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55373 - "GET /api/cookie-mgmt/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55379 - "DELETE /api/cookie-mgmt/jd_express/jd_main HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55382 - "GET /api/cookie-mgmt/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55385 - "DELETE /api/cookie-mgmt/jd_express/jd_express_20260313_091853 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55388 - "GET /api/cookie-mgmt/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55391 - "DELETE /api/cookie-mgmt/jd_express/jd_browser_20260313 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55394 - "GET /api/cookie-mgmt/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55398 - "DELETE /api/cookie-mgmt/jd_express/jd_express_20260315_151834 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55401 - "GET /api/cookie-mgmt/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55409 - "POST /api/scan/trigger HTTP/1.1" 200 OK
+[2026-03-15 16:42:07] INFO: Fetched (200) <GET https://so.m.jd.com/ware/search.action?keyword=%E5%8D%A1%E5%A3%AB%E9%85%B8%E5%A5%B6> (referer: https://www.google.com/)
+[2026-03-15 16:42:07] INFO: Fetched (200) <GET https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485> (referer: https://www.google.com/)
+[2026-03-15 16:42:12] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%85%B8%E5%A5%B6> (referer: https://www.google.com/)
+[2026-03-15 16:42:17] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%85%B8%E5%A5%B6&tab=tmall> (referer: https://www.google.com/)
+[2026-03-15 16:42:18] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:42:19] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:42:20] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+Douyin scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+[2026-03-15 16:42:42] INFO: Fetched (301) <GET https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:42:42] INFO: Fetched (200) <GET https://pages.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:42:59] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564164137_3yw1j3rpuh&refer_page_sn=10390> (referer: https://www.google.com/)
+[PDD Search] No items found. Preview: ​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+[pinduoduo] scrape_search() returned 0 results, falling back to product page scraping (url count: 1)
+INFO:     127.0.0.1:55638 - "GET /api/offers?limit=30 HTTP/1.1" 200 OK
+[2026-03-15 16:43:23] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564181890_f13jdfoo67&refer_page_sn=10390> (referer: https://www.google.com/)
+[2026-03-15 16:43:38] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%85%B8%E5%A5%B6&tab=sg> (referer: https://www.google.com/)
+No active accounts for pupu
+[2026-03-15 16:43:39] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:43:40] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:43:41] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+pupu scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+No active accounts for xiaoxiang
+[2026-03-15 16:43:47] INFO: Fetched (200) <GET https://mall.meituan.com/product/58102> (referer: https://www.google.com/)
+No active accounts for dingdong
+[2026-03-15 16:44:05] INFO: Fetched (200) <GET https://maicai.api.ddxq.mobi/product/detail?product_id=89234> (referer: https://www.google.com/)
+No active accounts for community_group
+[2026-03-15 16:44:24] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fgoods.html%3Fgoods_id%3D452179836&refer_page_name=goods_detail&refer_page_id=10014_1773564246715_az6eeiq45t&refer_page_sn=10014> (referer: https://www.google.com/)
+Community group login redirect: https://mobile.yangkeduo.com/goods.html?goods_id=452179836
+[2026-03-15 16:44:33] INFO: Fetched (200) <GET https://so.m.jd.com/ware/search.action?keyword=%E5%8D%A1%E5%A3%AB007> (referer: https://www.google.com/)
+[2026-03-15 16:44:34] INFO: Fetched (200) <GET https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485> (referer: https://www.google.com/)
+[2026-03-15 16:44:39] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB007> (referer: https://www.google.com/)
+[2026-03-15 16:44:44] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB007&tab=tmall> (referer: https://www.google.com/)
+[2026-03-15 16:44:44] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:44:46] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:44:47] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+Douyin scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+[2026-03-15 16:45:08] INFO: Fetched (301) <GET https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:45:08] INFO: Fetched (200) <GET https://pages.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:45:25] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fsearch_result.html%3Fsearch_key%3D%25E5%258D%25A1%25E5%25A3%25AB007&refer_page_name=search_result&refer_page_id=10015_1773564309885_v5cztzbz9g&refer_page_sn=10015> (referer: https://www.google.com/)
+[PDD Search] Redirected to login.
+[pinduoduo] scrape_search() returned 0 results, falling back to product page scraping (url count: 1)
+INFO:     127.0.0.1:56089 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+[2026-03-15 16:45:48] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564327706_e8m7cinzzo&refer_page_sn=10390> (referer: https://www.google.com/)
+[2026-03-15 16:46:04] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB007&tab=sg> (referer: https://www.google.com/)
+No active accounts for pupu
+[2026-03-15 16:46:05] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:46:06] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:46:07] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+pupu scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+No active accounts for xiaoxiang
+[2026-03-15 16:46:13] INFO: Fetched (200) <GET https://mall.meituan.com/product/58102> (referer: https://www.google.com/)
+No active accounts for dingdong
+[2026-03-15 16:46:31] INFO: Fetched (200) <GET https://maicai.api.ddxq.mobi/product/detail?product_id=89234> (referer: https://www.google.com/)
+No active accounts for community_group
+[2026-03-15 16:46:50] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fgoods.html%3Fgoods_id%3D452179836&refer_page_name=goods_detail&refer_page_id=10014_1773564393085_qnu80an6fb&refer_page_sn=10014> (referer: https://www.google.com/)
+Community group login redirect: https://mobile.yangkeduo.com/goods.html?goods_id=452179836
+[2026-03-15 16:47:03] INFO: Fetched (200) <GET https://so.m.jd.com/ware/search.action?keyword=%E5%8D%A1%E5%A3%AB%E9%B2%9C%E9%85%AA%E4%B9%B3> (referer: https://www.google.com/)
+[2026-03-15 16:47:03] INFO: Fetched (200) <GET https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485> (referer: https://www.google.com/)
+[2026-03-15 16:47:08] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%B2%9C%E9%85%AA%E4%B9%B3> (referer: https://www.google.com/)
+[2026-03-15 16:47:13] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%B2%9C%E9%85%AA%E4%B9%B3&tab=tmall> (referer: https://www.google.com/)
+[2026-03-15 16:47:14] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:47:15] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:47:16] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+Douyin scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+[2026-03-15 16:47:37] INFO: Fetched (301) <GET https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:47:37] INFO: Fetched (200) <GET https://pages.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:47:55] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fsearch_result.html%3Fsearch_key%3D%25E5%258D%25A1%25E5%25A3%25AB%25E9%25B2%259C%25E9%2585%25AA%25E4%25B9%25B3&refer_page_name=search_result&refer_page_id=10015_1773564459209_ki4klryc1d&refer_page_sn=10015> (referer: https://www.google.com/)
+[PDD Search] Redirected to login.
+[pinduoduo] scrape_search() returned 0 results, falling back to product page scraping (url count: 1)
+INFO:     127.0.0.1:56473 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56475 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56482 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56479 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56490 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56489 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56496 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56498 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+[2026-03-15 16:48:18] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fsearch_result.html%3Fsearch_key%3D%25E5%258D%25A1%25E5%25A3%25AB%25E9%25B2%259C%25E9%2585%25AA%25E4%25B9%25B3&refer_page_name=search_result&refer_page_id=10015_1773564476482_vv7ajk35v1&refer_page_sn=10015> (referer: https://www.google.com/)
+PDD login redirect: https://mobile.yangkeduo.com/search_result.html?search_key=%E5%8D%A1%E5%A3%AB%E9%B2%9C%E9%85%AA%E4%B9%B3
+[2026-03-15 16:48:33] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E9%B2%9C%E9%85%AA%E4%B9%B3&tab=sg> (referer: https://www.google.com/)
+No active accounts for pupu
+[2026-03-15 16:48:34] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:48:35] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:48:36] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+pupu scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+No active accounts for xiaoxiang
+[2026-03-15 16:48:42] INFO: Fetched (200) <GET https://mall.meituan.com/product/58102> (referer: https://www.google.com/)
+No active accounts for dingdong
+[2026-03-15 16:49:00] INFO: Fetched (200) <GET https://maicai.api.ddxq.mobi/product/detail?product_id=89234> (referer: https://www.google.com/)
+No active accounts for community_group
+[2026-03-15 16:49:19] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fgoods.html%3Fgoods_id%3D452179836&refer_page_name=goods_detail&refer_page_id=10014_1773564541769_ai9xxohapm&refer_page_sn=10014> (referer: https://www.google.com/)
+Community group login redirect: https://mobile.yangkeduo.com/goods.html?goods_id=452179836
+[2026-03-15 16:49:29] INFO: Fetched (200) <GET https://so.m.jd.com/ware/search.action?keyword=%E5%8D%A1%E5%A3%AB%E5%8E%9F%E6%80%81%E9%85%AA%E4%B9%B3> (referer: https://www.google.com/)
+[2026-03-15 16:49:29] INFO: Fetched (200) <GET https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485> (referer: https://www.google.com/)
+[2026-03-15 16:49:34] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E5%8E%9F%E6%80%81%E9%85%AA%E4%B9%B3> (referer: https://www.google.com/)
+[2026-03-15 16:49:39] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E5%8E%9F%E6%80%81%E9%85%AA%E4%B9%B3&tab=tmall> (referer: https://www.google.com/)
+[2026-03-15 16:49:39] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:49:41] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:49:42] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+Douyin scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+[2026-03-15 16:50:04] INFO: Fetched (301) <GET https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:50:04] INFO: Fetched (200) <GET https://pages.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:50:22] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564606922_li7cbr6pbh&refer_page_sn=10390> (referer: https://www.google.com/)
+[PDD Search] No items found. Preview: ​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+[pinduoduo] scrape_search() returned 0 results, falling back to product page scraping (url count: 1)
+[2026-03-15 16:50:45] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fsearch_result.html%3Fsearch_key%3D%25E5%258D%25A1%25E5%25A3%25AB%25E5%258E%259F%25E6%2580%2581%25E9%2585%25AA%25E4%25B9%25B3&refer_page_name=search_result&refer_page_id=10015_1773564623645_ogp1soj8om&refer_page_sn=10015> (referer: https://www.google.com/)
+PDD login redirect: https://mobile.yangkeduo.com/search_result.html?search_key=%E5%8D%A1%E5%A3%AB%E5%8E%9F%E6%80%81%E9%85%AA%E4%B9%B3
+[2026-03-15 16:51:00] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=%E5%8D%A1%E5%A3%AB%E5%8E%9F%E6%80%81%E9%85%AA%E4%B9%B3&tab=sg> (referer: https://www.google.com/)
+No active accounts for pupu
+[2026-03-15 16:51:01] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:51:02] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:51:03] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+pupu scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+No active accounts for xiaoxiang
+[2026-03-15 16:51:09] INFO: Fetched (200) <GET https://mall.meituan.com/product/58102> (referer: https://www.google.com/)
+No active accounts for dingdong
+[2026-03-15 16:51:27] INFO: Fetched (200) <GET https://maicai.api.ddxq.mobi/product/detail?product_id=89234> (referer: https://www.google.com/)
+No active accounts for community_group
+[2026-03-15 16:51:47] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fgoods.html%3Fgoods_id%3D452179836&refer_page_name=goods_detail&refer_page_id=10014_1773564689483_ynxol8uy2s&refer_page_sn=10014> (referer: https://www.google.com/)
+Community group login redirect: https://mobile.yangkeduo.com/goods.html?goods_id=452179836
+[2026-03-15 16:51:54] INFO: Fetched (200) <GET https://so.m.jd.com/ware/search.action?keyword=CLASSY%20KISS%20%E9%85%B8%E5%A5%B6> (referer: https://www.google.com/)
+[2026-03-15 16:51:55] INFO: Fetched (200) <GET https://h5.waimai.meituan.com/waimai/mindex/product?spuId=1230485> (referer: https://www.google.com/)
+[2026-03-15 16:52:00] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=CLASSY%20KISS%20%E9%85%B8%E5%A5%B6> (referer: https://www.google.com/)
+[2026-03-15 16:52:04] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=CLASSY%20KISS%20%E9%85%B8%E5%A5%B6&tab=tmall> (referer: https://www.google.com/)
+[2026-03-15 16:52:05] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:52:06] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:52:08] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+Douyin scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891
+Call log:
+  - navigating to "https://haohuo.douyin.com/pages/ecom_detail/index?page_id=356891", waiting until "load"
+
+[2026-03-15 16:52:29] INFO: Fetched (301) <GET https://www.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:52:29] INFO: Fetched (200) <GET https://pages.xiaohongshu.com/goods/64b5e8b0000000001500abc1> (referer: https://www.google.com/)
+[2026-03-15 16:52:47] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564751618_3avtkdfe0o&refer_page_sn=10390> (referer: https://www.google.com/)
+[PDD Search] No items found. Preview: ​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+[pinduoduo] scrape_search() returned 0 results, falling back to product page scraping (url count: 1)
+Screenshot error: Page.screenshot: Timeout 30000ms exceeded.
+Call log:
+  - taking page screenshot
+  - waiting for fonts to load...
+  - fonts loaded
+
+[2026-03-15 16:53:40] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/psnl_identify.html?page_from=1&scene=COMMON_VERIFY&refer_page_name=psnl_verification&refer_page_id=10390_1773564769474_wk3ughdze3&refer_page_sn=10390> (referer: https://www.google.com/)
+[2026-03-15 16:53:55] INFO: Fetched (200) <GET https://s.m.taobao.com/h5?q=CLASSY%20KISS%20%E9%85%B8%E5%A5%B6&tab=sg> (referer: https://www.google.com/)
+No active accounts for pupu
+[2026-03-15 16:53:56] WARNING: Attempt 1 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:53:57] WARNING: Attempt 2 failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+. Retrying in 1s...
+[2026-03-15 16:53:59] ERROR: Failed after 3 attempts: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+pupu scrape failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://j1.pupumall.com/share/product?productId=100435
+Call log:
+  - navigating to "https://j1.pupumall.com/share/product?productId=100435", waiting until "load"
+
+No active accounts for xiaoxiang
+[2026-03-15 16:54:06] INFO: Fetched (200) <GET https://mall.meituan.com/product/58102> (referer: https://www.google.com/)
+No active accounts for dingdong
+[2026-03-15 16:54:24] INFO: Fetched (200) <GET https://maicai.api.ddxq.mobi/product/detail?product_id=89234> (referer: https://www.google.com/)
+No active accounts for community_group
+[2026-03-15 16:54:44] INFO: Fetched (200) <GET https://mobile.yangkeduo.com/login.html?from=https%3A%2F%2Fmobile.yangkeduo.com%2Fgoods.html%3Fgoods_id%3D452179836&refer_page_name=goods_detail&refer_page_id=10014_1773564865580_d1682sjopb&refer_page_sn=10014> (referer: https://www.google.com/)
+Community group login redirect: https://mobile.yangkeduo.com/goods.html?goods_id=452179836
+INFO:     127.0.0.1:57681 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57969 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57976 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57980 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57983 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57970 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57986 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57992 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57990 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57995 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57998 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58004 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58002 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58011 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58010 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58017 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58023 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58022 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58029 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58028 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58036 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58035 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58042 - "GET /api/collection/jobs?page=1&page_size=15 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58040 - "GET /api/collection/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58045 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58048 - "GET /api/offers?page=1&page_size=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58107 - "GET /api/offers?page=1&page_size=30&sort_by=time_desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58565 - "GET /api/offers?page=1&page_size=30&sort_by=time_desc HTTP/1.1" 200 OK

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, handleError } from "@/lib/api";
 
+const ACTIVE_PLATFORMS = ["jd_express", "taobao", "tmall", "pinduoduo", "taobao_flash"];
 const PLATFORM_LABELS: Record<string, string> = {
   taobao: "淘宝", tmall: "天猫", jd_express: "京东秒送",
   pinduoduo: "拼多多", taobao_flash: "淘宝闪购",
@@ -134,7 +135,7 @@ export default function CollectionPage() {
         display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
         gap: "0.75rem", marginBottom: "1.5rem",
       }}>
-        {status?.platforms?.map((p: any) => (
+        {status?.platforms?.filter((p: any) => ACTIVE_PLATFORMS.includes(p.platform)).map((p: any) => (
           <div key={p.platform} className="card" style={{ padding: "0.75rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
               <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
@@ -177,7 +178,7 @@ export default function CollectionPage() {
           <select className="input" style={{ width: 130, fontSize: "0.75rem" }}
             value={filter.platform} onChange={(e) => { setFilter({ ...filter, platform: e.target.value }); setPage(1); }}>
             <option value="">全部平台</option>
-            {Object.entries(PLATFORM_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {ACTIVE_PLATFORMS.map(k => <option key={k} value={k}>{PLATFORM_LABELS[k]}</option>)}
           </select>
           <select className="input" style={{ width: 100, fontSize: "0.75rem" }}
             value={filter.status} onChange={(e) => { setFilter({ ...filter, status: e.target.value }); setPage(1); }}>

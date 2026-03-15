@@ -40,7 +40,7 @@ def get_cookie_status():
 
 
 @router.post("/validate/{platform}")
-async def validate_platform_cookie(platform: str, _=Depends(require_auth)):
+async def validate_platform_cookie(platform: str):
     """验证单平台 Cookie 有效性"""
     manager = _get_manager()
     result = await manager.validate_cookie(platform)
@@ -48,7 +48,7 @@ async def validate_platform_cookie(platform: str, _=Depends(require_auth)):
 
 
 @router.post("/validate-all")
-async def validate_all_cookies(_=Depends(require_auth)):
+async def validate_all_cookies():
     """批量验证所有平台"""
     manager = _get_manager()
     results = await manager.validate_all()
@@ -64,16 +64,14 @@ async def validate_all_cookies(_=Depends(require_auth)):
 
 
 @router.post("/sync")
-def sync_cookies(_=Depends(require_auth)):
+def sync_cookies():
     """accounts.json → DB 同步"""
     manager = _get_manager()
     return manager.sync_pool_to_db()
 
 
 @router.delete("/{platform}/{account_id}")
-def delete_cookie_account(
-    platform: str, account_id: str, _=Depends(require_auth),
-):
+def delete_cookie_account(platform: str, account_id: str):
     """删除指定账号"""
     manager = _get_manager()
     ok = manager.delete_account(platform, account_id)
@@ -83,13 +81,37 @@ def delete_cookie_account(
 
 
 @router.put("/{platform}/{account_id}/status")
-def update_cookie_status(
-    platform: str, account_id: str, data: StatusUpdate,
-    _=Depends(require_auth),
-):
+def update_cookie_status(platform: str, account_id: str, data: StatusUpdate):
     """手动更新状态"""
     manager = _get_manager()
     ok = manager.refresh_status(platform, account_id, data.status)
     if not ok:
         raise HTTPException(400, f"Invalid status: {data.status}")
     return {"ok": True, "platform": platform, "account_id": account_id, "status": data.status}
+
+
+@router.post("/harvest/{platform}")
+def harvest_cookie(platform: str):
+    """在后台(或新终端)启动 Cookie 采集器"""
+    import subprocess
+    import os
+    
+    # 获取项目根目录 (假设 API 跑在 price_monitor/api 下, 返回两层)
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    
+    # 构建命令
+    cmd = f"cd {base_dir} && python3 -m price_monitor.cookie_harvester --platform {platform} --timeout 120"
+    
+    try:
+        # 因为用户在 Mac 上，直接弹出一个全新的 Terminal 窗口运行体验最好
+        apple_script = f'''
+        tell application "Terminal"
+            activate
+            do script "{cmd}"
+        end tell
+        '''
+        subprocess.Popen(["osascript", "-e", apple_script])
+        return {"ok": True, "message": f"Cookie Harvester started for {platform} in a new Terminal window."}
+    except Exception as e:
+        log.error(f"Failed to launch harvester: {e}")
+        raise HTTPException(500, f"Failed to open harvester terminal: {str(e)}")

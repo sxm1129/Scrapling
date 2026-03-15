@@ -184,11 +184,11 @@ class TaobaoFlashScraper(BaseScraper):
 
             # 6. 截图
             try:
-                sd = self.screenshot.output_dir
-                os.makedirs(str(sd), exist_ok=True)
-                path = str(sd / f"taobao_flash_search_{keyword[:10]}.png")
-                await page.screenshot(path=path)
-                screenshot_path = path
+                screenshot_path = await self.screenshot.capture_full_page(
+                    page, 
+                    filename=f"taobao_flash_search_{keyword[:10]}.png",
+                    context_str=f"Taobao Flash | Search: {keyword[:10]}"
+                )
             except Exception as e:
                 log.error(f"  Screenshot error: {e}")
 
@@ -241,11 +241,11 @@ class TaobaoFlashScraper(BaseScraper):
             await page.wait_for_timeout(3000)
 
             try:
-                sd = self.screenshot.output_dir
-                os.makedirs(str(sd), exist_ok=True)
-                path = str(sd / f"taobao_flash_{product_id}.png")
-                await page.screenshot(path=path)
-                screenshot_path = path
+                screenshot_path = await self.screenshot.capture_full_page(
+                    page, 
+                    filename=f"taobao_flash_{product_id}.png",
+                    context_str=f"Taobao Flash | ID: {product_id}"
+                )
             except Exception as e:
                 log.error(f"Screenshot error: {e}")
 

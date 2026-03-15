@@ -159,11 +159,11 @@ class TaobaoScraper(BaseScraper):
             await page.wait_for_timeout(3000)
 
             try:
-                screenshot_dir = self.screenshot.output_dir
-                os.makedirs(str(screenshot_dir), exist_ok=True)
-                path = str(screenshot_dir / f"taobao_{item_id}.png")
-                await page.screenshot(path=path)
-                screenshot_path = path
+                screenshot_path = await self.screenshot.capture_full_page(
+                    page, 
+                    filename=f"taobao_{item_id}.png",
+                    context_str=f"Taobao | Item: {item_id}"
+                )
             except Exception as e:
                 log.error(f"Screenshot error: {e}")
 
@@ -304,6 +304,154 @@ class TaobaoScraper(BaseScraper):
                               discount_value=float(match.group(1)) / 10)
         return None
 
+    async def scrape_search(self, keyword: str, max_items: int = 5) -> list["ProductPrice"]:
+        """通过淘宝移动端搜索页采集搜索结果列表
+
+        使用 StealthyFetcher 加 Cookie 渲染 s.m.taobao.com/search，
+        通过 JS 提取搜索结果卡片中的商品数据。
+        """
+        from urllib.parse import quote
+        from datetime import datetime, timezone
+
+        kw_enc = quote(keyword)
+        search_url = f"https://s.m.taobao.com/h5?q={kw_enc}"
+
+        # 天猫子类使用天猫 tab
+        if self.platform.value == "tmall":
+            search_url = f"https://s.m.taobao.com/h5?q={kw_enc}&tab=tmall"
+
+        results = []
+
+        JS_SEARCH_LIST = """() => {
+            const items = [];
+            // 淘宝搜索结果卡片: .item / [class*='item'] / [data-cache-key]
+            const selectors = [
+                "[class*='m-itemlist'] li",
+                "[class*='item-list'] li",
+                "[data-sku]",
+                "[class*='itemcard']",
+            ];
+            let cards = [];
+            for (const sel of selectors) {
+                const found = document.querySelectorAll(sel);
+                if (found.length > 2) { cards = Array.from(found); break; }
+            }
+            if (cards.length === 0) {
+                // fallback: 任何含价格的 div
+                cards = Array.from(document.querySelectorAll("div")).filter(el =>
+                    el.querySelector && el.querySelector("[class*='price'], [class*='Price']")
+                    && el.innerText && el.innerText.length > 5 && el.innerText.length < 500
+                ).slice(0, 20);
+            }
+            for (const card of cards.slice(0, 10)) {
+                const text = card.innerText || "";
+                if (!text.trim()) continue;
+                // 提取 item_id
+                const links = card.querySelectorAll("a[href*='item_id='], a[href*='/item/']");
+                let item_id = "";
+                for (const a of links) {
+                    const m = a.href.match(/item_id=(\d+)|\/item\/(\d+)/);
+                    if (m) { item_id = m[1] || m[2]; break; }
+                }
+                // 提取价格
+                let price = "";
+                const priceEl = card.querySelector(
+                    "[class*='price'], [class*='Price'], [class*='yuan'], em"
+                );
+                if (priceEl) price = priceEl.innerText.trim().replace(/[^0-9.]/g, "");
+                // 提取标题
+                let title = "";
+                const titleEl = card.querySelector(
+                    "[class*='title'], [class*='name'], h3, h2"
+                );
+                if (titleEl) title = titleEl.innerText.trim().slice(0, 120);
+                if (!price && !title) continue;
+                items.push({ item_id, price, title, raw: text.slice(0, 300) });
+            }
+            return { items, url: window.location.href,
+                     total_text: document.body.innerText.slice(0, 500) };
+        }"""
+
+        extracted: dict = {}
+
+        async def page_action(page):
+            nonlocal extracted
+            try:
+                await page.wait_for_selector(
+                    "[class*='item'], [class*='price'], [class*='card']", timeout=12000
+                )
+            except Exception:
+                pass
+            await page.wait_for_timeout(2000)
+            try:
+                extracted = await page.evaluate(JS_SEARCH_LIST)
+            except Exception as e:
+                log.error(f"[Taobao Search] JS eval error: {e}")
+
+        cookies = None
+        account_id = None
+        if self.account_pool:
+            account = self.account_pool.get_cookie(self.platform.value)
+            if account:
+                cookies = account["cookies"]
+                account_id = account["id"]
+                log.info(f"[Taobao Search] Using Cookie: {account_id}")
+
+        try:
+            fetch_kwargs = {
+                "headless": self.config.scraping.headless,
+                "network_idle": True,
+                "google_search": True,
+                "page_action": page_action,
+                "timeout": self.config.scraping.browser_timeout,
+            }
+            if cookies:
+                fetch_kwargs["cookies"] = cookies
+
+            await StealthyFetcher.async_fetch(search_url, **fetch_kwargs)
+        except Exception as e:
+            log.error(f"[Taobao Search] Fetch error: {e}")
+            return []
+
+        # 检查是否被重定向到登录页
+        if "login" in extracted.get("url", "").lower():
+            log.warning(f"[Taobao Search] Redirected to login. Cookie may be expired.")
+            return []
+
+        items = extracted.get("items", [])
+        if not items:
+            log.warning(f"[Taobao Search] No items extracted. URL: {extracted.get('url')} "
+                        f"Text preview: {extracted.get('total_text', '')[:200]}")
+            return []
+
+        for item in items[:max_items]:
+            item_id = item.get("item_id", "")
+            title = item.get("title", "").strip()
+            price_str = item.get("price", "")
+
+            price = 0.0
+            try:
+                price = float(re.sub(r"[^\d.]", "", price_str)) if price_str else 0.0
+            except ValueError:
+                pass
+
+            if not title:
+                continue
+
+            product = ProductPrice(
+                platform=self.platform,
+                product_id=item_id or title[:20],
+                product_name=title,
+                current_price=price,
+                final_price=price,
+                product_url=f"https://item.taobao.com/item.htm?id={item_id}" if item_id else search_url,
+                scraped_at=datetime.now(timezone.utc).isoformat(),
+            )
+            results.append(product)
+            log.info(f"[{self.platform.value} Search] {title[:40]} | ¥{price:.2f}")
+
+        return results
+
 
 class TmallScraper(TaobaoScraper):
     """天猫采集器 — 继承淘宝采集器 (共享阿里安全体系)"""
@@ -315,3 +463,4 @@ class TmallScraper(TaobaoScraper):
         if match:
             return f"https://detail.m.tmall.com/item.htm?id={match.group(1)}"
         return url
+

@@ -49,6 +49,7 @@ class OfferSnapshot(Base):
 
     __table_args__ = (
         Index("idx_platform_time", "platform", "captured_at"),
+        Index("idx_final_price", "final_price"),
     )
 
 

@@ -122,11 +122,11 @@ class XiaohongshuScraper(BaseScraper):
             await page.wait_for_timeout(4000)
 
             try:
-                sd = self.screenshot.output_dir
-                os.makedirs(str(sd), exist_ok=True)
-                path = str(sd / f"xhs_{product_id}.png")
-                await page.screenshot(path=path)
-                screenshot_path = path
+                screenshot_path = await self.screenshot.capture_full_page(
+                    page, 
+                    filename=f"xhs_{product_id}.png",
+                    context_str=f"Xiaohongshu | ID: {product_id}"
+                )
             except Exception as e:
                 log.error(f"Screenshot error: {e}")
 
