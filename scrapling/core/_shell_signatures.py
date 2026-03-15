@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from scrapling.core._types import (
     Any,
     Dict,

@@ -1,6 +1,7 @@
 """
 Functions related to files and URLs
 """
+from __future__ import annotations
 
 from urllib.parse import urlparse
 

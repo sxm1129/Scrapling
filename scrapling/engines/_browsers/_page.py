@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from threading import RLock
 from dataclasses import dataclass
 

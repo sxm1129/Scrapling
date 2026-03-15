@@ -7,6 +7,7 @@ So you don't have to learn a new selectors/api method like what bs4 done with so
 
     If you want to learn about this, head to https://cssselect.readthedocs.io/en/latest/#cssselect.FunctionalPseudoElement
 """
+from __future__ import annotations
 
 from functools import lru_cache
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from types import MappingProxyType
 from re import compile as re_compile, UNICODE, IGNORECASE

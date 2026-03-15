@@ -1,6 +1,7 @@
 """
 Functions related to custom types or type checking
 """
+from __future__ import annotations
 
 from functools import lru_cache
 

@@ -1,6 +1,7 @@
 """
 Functions related to generating headers and fingerprints generally
 """
+from __future__ import annotations
 
 from functools import lru_cache
 from platform import system as platform_system
@@ -23,15 +24,14 @@ def get_os_name() -> OSName | Tuple:
 
     :return: Current OS name or `None` otherwise
     """
-    match __OS_NAME__:  # pragma: no cover
-        case "Linux":
-            return "linux"
-        case "Darwin":
-            return "macos"
-        case "Windows":
-            return "windows"
-        case _:
-            return SUPPORTED_OPERATING_SYSTEMS
+    if __OS_NAME__ == "Linux":  # pragma: no cover
+        return "linux"
+    elif __OS_NAME__ == "Darwin":
+        return "macos"
+    elif __OS_NAME__ == "Windows":
+        return "windows"
+    else:
+        return SUPPORTED_OPERATING_SYSTEMS
 
 
 def generate_headers(browser_mode: bool | str = False) -> Dict:

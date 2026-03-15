@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from time import time
 from asyncio import sleep as asyncio_sleep, Lock
 from contextlib import contextmanager, asynccontextmanager

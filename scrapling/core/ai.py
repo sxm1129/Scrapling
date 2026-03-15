@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from asyncio import gather
 
 from mcp.server.fastmcp import FastMCP

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from io import BytesIO
 
 from curl_cffi.requests import (
@@ -11,6 +13,7 @@ from scrapling.core._types import (
     List,
     Set,
     Tuple,
+    Union,
     Mapping,
     Optional,
     Callable,
@@ -23,7 +26,7 @@ from scrapling.core._types import (
 from scrapling.engines.toolbelt.proxy_rotation import ProxyRotator
 
 # Type alias for `impersonate` parameter - accepts a single browser or list of browsers
-ImpersonateType: TypeAlias = BrowserTypeLiteral | List[BrowserTypeLiteral] | None
+ImpersonateType: TypeAlias = Union[BrowserTypeLiteral, List[BrowserTypeLiteral], None]
 
 
 # Types for session initialization

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import lru_cache
 from re import compile as re_compile
 

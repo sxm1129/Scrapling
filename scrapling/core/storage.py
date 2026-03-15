@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from hashlib import sha256
 from threading import RLock
 from functools import lru_cache

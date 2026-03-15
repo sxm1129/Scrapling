@@ -2,9 +2,15 @@
 Type definitions for type checking purposes.
 """
 
+import sys
+
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+else:
+    from typing_extensions import TypeAlias
+
 from typing import (
     TYPE_CHECKING,
-    TypeAlias,
     cast,
     overload,
     Any,

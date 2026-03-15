@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -*- coding: utf-8 -*-
 from sys import stderr
 from copy import deepcopy
@@ -600,12 +602,11 @@ class Convertor:
 
             pages = [page] if not css_selector else cast(Selectors, page.css(css_selector))
             for page in pages:
-                match extraction_type:
-                    case "markdown":
+                if extraction_type == "markdown":
                         yield cls._convert_to_markdown(page.html_content)
-                    case "html":
+                elif extraction_type == "html":
                         yield page.html_content
-                    case "text":
+                elif extraction_type == "text":
                         txt_content = page.get_all_text(
                             strip=True, ignore_tags=("script", "style", "noscript", "svg", "iframe")
                         )
