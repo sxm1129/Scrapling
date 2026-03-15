@@ -107,4 +107,7 @@ output/*/index.html
 # Sphinx
 docs/_build
 public/
-web/
+web/node_modules/
+web/.next/
+.env
+data/
