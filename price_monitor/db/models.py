@@ -8,7 +8,7 @@ from typing import Optional
 from sqlalchemy import (
     Boolean, Column, DateTime, Enum, Index, Integer, BigInteger,
     Numeric, String, Text, JSON, ForeignKey, UniqueConstraint,
-    create_engine,
+    create_engine, func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -42,10 +42,10 @@ class OfferSnapshot(Base):
     parse_status: Mapped[str] = mapped_column(String(10), default="OK")
     fail_reason: Mapped[Optional[str]] = mapped_column(String(300))
     captured_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     # 关联
-    violations: Mapped[list["Violation"]] = relationship(back_populates="offer", cascade="all")
+    violations: Mapped[list["Violation"]] = relationship(back_populates="offer", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_platform_time", "platform", "captured_at"),
@@ -71,7 +71,7 @@ class Violation(Base):
     screenshot_path: Mapped[Optional[str]] = mapped_column(String(500))
     canonical_url: Mapped[Optional[str]] = mapped_column(String(500))
     notified: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     # 关联
     offer: Mapped["OfferSnapshot"] = relationship(back_populates="violations")
@@ -91,7 +91,7 @@ class BaselinePrice(Base):
     baseline_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     note: Mapped[Optional[str]] = mapped_column(String(300))
     updated_by: Mapped[Optional[str]] = mapped_column(String(50))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class SearchKeyword(Base):
@@ -102,7 +102,7 @@ class SearchKeyword(Base):
     keyword: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     priority: Mapped[int] = mapped_column(Integer, default=0, comment="0=普通, 1=重点")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class WhitelistRule(Base):
@@ -117,7 +117,7 @@ class WhitelistRule(Base):
     approved_by: Mapped[Optional[str]] = mapped_column(String(50))
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class CookieAccount(Base):
@@ -131,7 +131,7 @@ class CookieAccount(Base):
     status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
     last_used: Mapped[Optional[datetime]] = mapped_column(DateTime)
     expired_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     __table_args__ = (
         UniqueConstraint("platform", "account_id", name="uk_platform_account"),

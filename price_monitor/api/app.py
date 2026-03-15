@@ -13,7 +13,9 @@ from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from price_monitor.db.session import init_db, get_db, get_session_factory
 from price_monitor.db import crud
@@ -25,6 +27,34 @@ from price_monitor.db.models import (
 log = logging.getLogger(__name__)
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "kashi2026")
+
+
+# ── Pydantic 请求模型 ──
+
+class BaselineCreate(BaseModel):
+    product_pattern: str = Field(..., min_length=1, max_length=200)
+    sku_name: Optional[str] = None
+    baseline_price: float = Field(..., gt=0)
+    note: Optional[str] = None
+
+class KeywordCreate(BaseModel):
+    keyword: str = Field(..., min_length=1, max_length=100)
+    priority: int = Field(default=0, ge=0, le=1)
+
+class KeywordToggle(BaseModel):
+    enabled: bool
+
+class WhitelistCreate(BaseModel):
+    rule_type: str = Field(..., pattern="^(SHOP|SKU|URL|PROJECT)$")
+    match_pattern: str = Field(..., min_length=1, max_length=300)
+    platform: Optional[str] = None
+    reason: Optional[str] = None
+    approved_by: Optional[str] = None
+
+class CookieSave(BaseModel):
+    platform: str = Field(..., min_length=1)
+    account_id: str = Field(..., min_length=1)
+    cookies: list
 
 
 @asynccontextmanager
@@ -55,6 +85,14 @@ app.add_middleware(
 screenshot_dir = os.getenv("SCREENSHOT_DIR", "./data/screenshots")
 Path(screenshot_dir).mkdir(parents=True, exist_ok=True)
 app.mount("/screenshots", StaticFiles(directory=screenshot_dir), name="screenshots")
+
+
+# ── 全局异常处理 ──
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    log.error(f"Unhandled error: {exc}", exc_info=True)
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 
 # ── 认证 ──
@@ -151,8 +189,8 @@ def list_baselines(db: Session = Depends(get_db)):
 
 
 @app.post("/api/baselines")
-def create_baseline(data: dict, db: Session = Depends(get_db)):
-    bp = crud.upsert_baseline(db, data)
+def create_baseline(data: BaselineCreate, db: Session = Depends(get_db)):
+    bp = crud.upsert_baseline(db, data.model_dump(exclude_none=True))
     db.commit()
     return _baseline_to_dict(bp)
 
@@ -175,15 +213,15 @@ def list_keywords(db: Session = Depends(get_db)):
 
 
 @app.post("/api/keywords")
-def add_keyword(data: dict, db: Session = Depends(get_db)):
-    kw = crud.add_keyword(db, data["keyword"], data.get("priority", 0))
+def add_keyword(data: KeywordCreate, db: Session = Depends(get_db)):
+    kw = crud.add_keyword(db, data.keyword.strip(), data.priority)
     db.commit()
     return _keyword_to_dict(kw)
 
 
 @app.put("/api/keywords/{keyword_id}")
-def toggle_keyword(keyword_id: int, data: dict, db: Session = Depends(get_db)):
-    ok = crud.toggle_keyword(db, keyword_id, data.get("enabled", True))
+def toggle_keyword(keyword_id: int, data: KeywordToggle, db: Session = Depends(get_db)):
+    ok = crud.toggle_keyword(db, keyword_id, data.enabled)
     if not ok:
         raise HTTPException(404, "Keyword not found")
     db.commit()
@@ -208,8 +246,8 @@ def list_whitelist(db: Session = Depends(get_db)):
 
 
 @app.post("/api/whitelist")
-def create_whitelist(data: dict, db: Session = Depends(get_db)):
-    rule = crud.create_whitelist(db, data)
+def create_whitelist(data: WhitelistCreate, db: Session = Depends(get_db)):
+    rule = crud.create_whitelist(db, data.model_dump(exclude_none=True))
     db.commit()
     return _whitelist_to_dict(rule)
 
@@ -232,8 +270,8 @@ def list_cookies(db: Session = Depends(get_db)):
 
 
 @app.post("/api/cookies")
-def save_cookies(data: dict, db: Session = Depends(get_db)):
-    ca = crud.save_cookies(db, data["platform"], data["account_id"], data["cookies"])
+def save_cookies(data: CookieSave, db: Session = Depends(get_db)):
+    ca = crud.save_cookies(db, data.platform, data.account_id, data.cookies)
     db.commit()
     return _cookie_to_dict(ca)
 
@@ -262,10 +300,15 @@ def export_violations(
 @app.post("/api/scan/trigger")
 async def trigger_scan():
     """手动触发一轮采集"""
-    # 异步启动采集, 不阻塞 API
     import asyncio
+    import threading
     from price_monitor.scheduler import run_scan_round
-    asyncio.create_task(run_scan_round())
+    # 在后台线程中运行, 避免 uvicorn event loop 冲突
+    thread = threading.Thread(
+        target=lambda: asyncio.run(run_scan_round()),
+        daemon=True,
+    )
+    thread.start()
     return {"status": "triggered"}
 
 

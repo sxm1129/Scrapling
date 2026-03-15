@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, handleError } from "@/lib/api";
 
 export default function WhitelistPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -12,16 +12,20 @@ export default function WhitelistPage() {
 
   const handleAdd = async () => {
     if (!form.match_pattern) return;
-    await api.createWhitelist(form);
-    setForm({ rule_type: "SHOP", match_pattern: "", platform: "", reason: "", approved_by: "" });
-    setShowAdd(false);
-    load();
+    try {
+      await api.createWhitelist(form);
+      setForm({ rule_type: "SHOP", match_pattern: "", platform: "", reason: "", approved_by: "" });
+      setShowAdd(false);
+      load();
+    } catch (e) { handleError(e, "添加白名单"); }
   };
 
   const handleRevoke = async (id: number) => {
     if (!confirm("确定撤销?")) return;
-    await api.revokeWhitelist(id);
-    load();
+    try {
+      await api.revokeWhitelist(id);
+      load();
+    } catch (e) { handleError(e, "撤销白名单"); }
   };
 
   return (

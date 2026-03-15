@@ -24,6 +24,7 @@ log = logging.getLogger("antigravity")
 
 def main():
     """启动 FastAPI 服务器 + 定时采集"""
+    import signal
     import uvicorn
     from apscheduler.schedulers.background import BackgroundScheduler
     from price_monitor.scheduler import run_scan_round
@@ -39,19 +40,31 @@ def main():
         hours=scan_interval,
         id="scan_round",
         name=f"Full scan every {scan_interval}h",
+        misfire_grace_time=3600,
     )
     scheduler.start()
     log.info(f"Scheduler started: scan every {scan_interval}h")
 
+    # 优雅关闭
+    def shutdown_handler(signum, frame):
+        log.info("Received shutdown signal, stopping scheduler...")
+        scheduler.shutdown(wait=False)
+        sys.exit(0)
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+
     # 启动 FastAPI
     log.info(f"Starting API server on port {api_port}...")
-    uvicorn.run(
-        "price_monitor.api.app:app",
-        host="0.0.0.0",
-        port=api_port,
-        reload=False,
-        log_level="info",
-    )
+    try:
+        uvicorn.run(
+            "price_monitor.api.app:app",
+            host="0.0.0.0",
+            port=api_port,
+            reload=False,
+            log_level="info",
+        )
+    finally:
+        scheduler.shutdown(wait=False)
 
 
 if __name__ == "__main__":

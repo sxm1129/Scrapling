@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, handleError } from "@/lib/api";
 
 export default function BaselinesPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -12,21 +12,25 @@ export default function BaselinesPage() {
 
   const handleAdd = async () => {
     if (!form.product_pattern || !form.baseline_price) return;
-    await api.createBaseline({
-      product_pattern: form.product_pattern,
-      sku_name: form.sku_name,
-      baseline_price: parseFloat(form.baseline_price),
-      note: form.note,
-    });
-    setForm({ product_pattern: "", sku_name: "", baseline_price: "", note: "" });
-    setShowAdd(false);
-    load();
+    try {
+      await api.createBaseline({
+        product_pattern: form.product_pattern,
+        sku_name: form.sku_name || undefined,
+        baseline_price: parseFloat(form.baseline_price),
+        note: form.note || undefined,
+      });
+      setForm({ product_pattern: "", sku_name: "", baseline_price: "", note: "" });
+      setShowAdd(false);
+      load();
+    } catch (e) { handleError(e, "添加基准价"); }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("确定删除?")) return;
-    await api.deleteBaseline(id);
-    load();
+    try {
+      await api.deleteBaseline(id);
+      load();
+    } catch (e) { handleError(e, "删除基准价"); }
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, handleError } from "@/lib/api";
 
 export default function KeywordsPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -11,20 +11,26 @@ export default function KeywordsPage() {
 
   const handleAdd = async () => {
     if (!newKw.trim()) return;
-    await api.addKeyword({ keyword: newKw.trim(), priority: 0 });
-    setNewKw("");
-    load();
+    try {
+      await api.addKeyword({ keyword: newKw.trim(), priority: 0 });
+      setNewKw("");
+      load();
+    } catch (e) { handleError(e, "添加关键词"); }
   };
 
   const handleToggle = async (id: number, enabled: boolean) => {
-    await api.toggleKeyword(id, !enabled);
-    load();
+    try {
+      await api.toggleKeyword(id, !enabled);
+      load();
+    } catch (e) { handleError(e, "切换关键词"); }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("确定删除?")) return;
-    await api.deleteKeyword(id);
-    load();
+    try {
+      await api.deleteKeyword(id);
+      load();
+    } catch (e) { handleError(e, "删除关键词"); }
   };
 
   return (

@@ -126,24 +126,46 @@ def process_offers(session: Session, offers: list[OfferSnapshot]) -> list[Violat
     violations = []
 
     for offer in offers:
-        # 1) 匹配基准价
-        baseline = match_baseline(offer.product_name, baselines)
-        if baseline is None:
+        try:
+            # 0) 跳过无效 offer
+            if not offer.id or not offer.product_name:
+                continue
+
+            # 1) 匹配基准价
+            baseline = match_baseline(offer.product_name, baselines)
+            if baseline is None:
+                continue
+
+            # 2) 评估违规
+            violation_data = evaluate_violation(offer, baseline)
+            if violation_data is None:
+                continue
+
+            # 3) 去重: 同一 offer 不重复创建违规
+            existing = session.query(Violation).filter(
+                Violation.offer_id == offer.id,
+                Violation.severity == violation_data["severity"],
+            ).first()
+            if existing:
+                continue
+
+            # 4) 白名单检查
+            is_whitelisted = check_whitelist(offer, whitelist_rules)
+            violation_data["is_whitelisted"] = is_whitelisted
+
+            # 5) 创建违规记录
+            v = crud.create_violation(session, violation_data)
+            violations.append(v)
+        except Exception as e:
+            log.error(f"Error processing offer {offer.id}: {e}")
             continue
 
-        # 2) 评估违规
-        violation_data = evaluate_violation(offer, baseline)
-        if violation_data is None:
-            continue
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        log.error(f"Commit failed: {e}")
+        raise
 
-        # 3) 白名单检查
-        is_whitelisted = check_whitelist(offer, whitelist_rules)
-        violation_data["is_whitelisted"] = is_whitelisted
-
-        # 4) 创建违规记录
-        v = crud.create_violation(session, violation_data)
-        violations.append(v)
-
-    session.commit()
     log.info(f"Processed {len(offers)} offers → {len(violations)} violations")
     return violations

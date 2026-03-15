@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useEffect, useState, useCallback } from "react";
+import { api, handleError } from "@/lib/api";
 
 const PLATFORM_LABELS: Record<string, string> = {
   taobao: "淘宝", tmall: "天猫", jd: "京东",
@@ -14,17 +14,20 @@ export default function ViolationsPage() {
   const [filters, setFilters] = useState({ platform: "", severity: "" });
   const [selected, setSelected] = useState<any>(null);
 
-  const load = () => {
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
     const params: Record<string, string> = { page: String(page), page_size: "20" };
     if (filters.platform) params.platform = filters.platform;
     if (filters.severity) params.severity = filters.severity;
     api.getViolations(params).then((r: any) => {
       setItems(r.items || []);
       setTotal(r.total || 0);
-    }).catch(console.error);
-  };
+    }).catch((e) => handleError(e, "加载违规列表")).finally(() => setLoading(false));
+  }, [page, filters]);
 
-  useEffect(() => { load(); }, [page, filters]);
+  useEffect(() => { load(); }, [load]);
 
   const totalPages = Math.ceil(total / 20);
 

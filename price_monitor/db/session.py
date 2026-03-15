@@ -37,7 +37,9 @@ def get_engine():
             get_db_url(),
             pool_size=5,
             max_overflow=10,
-            pool_recycle=3600,
+            pool_recycle=1800,
+            pool_pre_ping=True,
+            pool_timeout=10,
             echo=False,
         )
     return _engine
@@ -56,12 +58,17 @@ def get_db() -> Session:
     session = factory()
     try:
         yield session
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
 
 def init_db():
     """初始化数据库 — 建表 + 插入初始数据"""
+    import logging
+    log = logging.getLogger(__name__)
     engine = get_engine()
     Base.metadata.create_all(engine)
 
@@ -81,6 +88,9 @@ def init_db():
             ]
             session.add_all(defaults)
             session.commit()
-            print(f"  Inserted {len(defaults)} default keywords")
+            log.info(f"Inserted {len(defaults)} default keywords")
+    except Exception as e:
+        session.rollback()
+        log.error(f"init_db seed failed: {e}")
     finally:
         session.close()

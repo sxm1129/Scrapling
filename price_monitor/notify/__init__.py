@@ -23,6 +23,10 @@ def _get_webhook() -> str:
     return WEBHOOK_URL
 
 
+WEBHOOK_TIMEOUT = 15
+WEBHOOK_MAX_RETRIES = 3
+
+
 def send_text(text: str) -> bool:
     """发送纯文本消息到飞书"""
     webhook = _get_webhook()
@@ -34,16 +38,7 @@ def send_text(text: str) -> bool:
         "msg_type": "text",
         "content": {"text": text},
     }
-    try:
-        resp = requests.post(webhook, json=payload, timeout=10)
-        data = resp.json()
-        if data.get("code") == 0:
-            return True
-        log.error(f"Feishu send failed: {data}")
-        return False
-    except Exception as e:
-        log.error(f"Feishu request failed: {e}")
-        return False
+    return _post_webhook(webhook, payload)
 
 
 def send_rich_card(title: str, elements: list[dict]) -> bool:
@@ -63,16 +58,33 @@ def send_rich_card(title: str, elements: list[dict]) -> bool:
             "elements": elements,
         },
     }
-    try:
-        resp = requests.post(webhook, json=card, timeout=10)
-        data = resp.json()
-        if data.get("code") == 0:
-            return True
-        log.error(f"Feishu card failed: {data}")
-        return False
-    except Exception as e:
-        log.error(f"Feishu card request failed: {e}")
-        return False
+    return _post_webhook(webhook, card)
+
+
+def _post_webhook(url: str, payload: dict) -> bool:
+    """发送 Webhook 请求 (带重试)"""
+    import time
+    for attempt in range(WEBHOOK_MAX_RETRIES):
+        try:
+            resp = requests.post(url, json=payload, timeout=WEBHOOK_TIMEOUT)
+            try:
+                data = resp.json()
+            except ValueError:
+                log.error(f"Feishu response not JSON: {resp.text[:200]}")
+                return False
+            if data.get("code") == 0:
+                return True
+            log.error(f"Feishu send failed (attempt {attempt+1}): {data}")
+        except requests.exceptions.Timeout:
+            log.warning(f"Feishu timeout (attempt {attempt+1}/{WEBHOOK_MAX_RETRIES})")
+        except requests.exceptions.ConnectionError as e:
+            log.error(f"Feishu connection error (attempt {attempt+1}): {e}")
+        except Exception as e:
+            log.error(f"Feishu unexpected error: {e}")
+            return False
+        if attempt < WEBHOOK_MAX_RETRIES - 1:
+            time.sleep(2 ** attempt)  # 1s, 2s backoff
+    return False
 
 
 def notify_violation(violation) -> bool:

@@ -6,8 +6,8 @@ import hashlib
 import logging
 import os
 import time
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,7 +27,7 @@ PAGES_PER_PLATFORM = int(os.getenv("PAGES_PER_PLATFORM", "20"))
 
 def _make_offer_hash(platform: str, product_name: str, shop_name: str) -> str:
     """生成 offer 幂等 hash"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     bucket = now.strftime("%Y%m%d%H")
     raw = f"{platform}|{product_name}|{shop_name}|{bucket}"
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
@@ -110,6 +110,10 @@ async def run_scan_round():
 
     except Exception as e:
         log.error(f"Scan round failed: {e}", exc_info=True)
+        try:
+            session.rollback()
+        except Exception:
+            pass
     finally:
         session.close()
 
@@ -129,7 +133,7 @@ async def _scrape_platform(platform: str, keyword: str, session) -> list[OfferSn
         pool = AccountPool(pool_file=str(Path(__file__).resolve().parents[1] / "accounts.json"))
 
         kw_enc = quote(keyword)
-        captured_at = datetime.utcnow()
+        captured_at = datetime.now(timezone.utc)
 
         if platform == "taobao":
             cookie_platform = "taobao"
@@ -160,17 +164,25 @@ async def _scrape_platform(platform: str, keyword: str, session) -> list[OfferSn
             return []
 
         for p in products:
+            raw_price_val = p.get("price", 0)
+            try:
+                price = Decimal(str(raw_price_val)) if raw_price_val else Decimal("0")
+            except (InvalidOperation, ValueError):
+                price = Decimal("0")
+            if price <= 0:
+                continue
+
             offer = OfferSnapshot(
                 offer_hash=_make_offer_hash(platform, p.get("title", ""), p.get("shop", "")),
                 platform=platform,
                 keyword=keyword,
                 canonical_url=p.get("url", url),
-                product_name=p.get("title", ""),
-                shop_name=p.get("shop", ""),
-                ship_from_city=p.get("location", ""),
-                raw_price=Decimal(str(p.get("price", 0))),
-                final_price=Decimal(str(p.get("price", 0))),
-                sales_volume=p.get("sales", ""),
+                product_name=p.get("title", "")[:300],
+                shop_name=p.get("shop", "")[:100],
+                ship_from_city=p.get("location", "")[:50],
+                raw_price=price,
+                final_price=price,
+                sales_volume=p.get("sales", "")[:50],
                 confidence="MED",
                 parse_status="OK",
                 captured_at=captured_at,
@@ -229,11 +241,13 @@ async def _fetch_with_js(pool, cookie_platform, url, keyword, init_url=None):
         if init_url:
             try:
                 await page.goto(init_url, wait_until="domcontentloaded", timeout=15000)
-            except: pass
+            except Exception as e:
+                log.warning(f"init_url goto failed: {e}")
             await page.wait_for_timeout(2000)
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-        except: pass
+        except Exception as e:
+            log.warning(f"main url goto failed: {e}")
         await page.wait_for_timeout(5000)
         for _ in range(6):
             await page.evaluate("window.scrollBy(0, 500)")
@@ -243,7 +257,8 @@ async def _fetch_with_js(pool, cookie_platform, url, keyword, init_url=None):
             raw = await page.evaluate(JS_EXTRACT)
             import json
             products = json.loads(raw) if isinstance(raw, str) else raw
-        except: pass
+        except Exception as e:
+            log.warning(f"JS extract failed: {e}")
 
     try:
         await StealthyFetcher.async_fetch(
@@ -287,14 +302,16 @@ async def _fetch_with_api(pool, cookie_platform, url, keyword):
                                 "sales": str(item.get("realSales", ""))[:50],
                                 "location": item.get("procity", ""),
                             })
-                except: pass
+                except Exception as e:
+                    log.warning(f"MTOP parse error: {e}")
 
         page.on("response", handle_resp)
         if cookies:
             await page.context.add_cookies(cookies)
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-        except: pass
+        except Exception as e:
+            log.warning(f"Flash goto failed: {e}")
         await page.wait_for_timeout(5000)
 
     try:

@@ -2,7 +2,7 @@
 CRUD 操作 — 数据库读写封装
 """
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Optional
 
@@ -20,8 +20,10 @@ from price_monitor.db.models import (
 
 def make_offer_hash(platform: str, url: str, time_bucket_min: int = 60) -> str:
     """生成 offer 幂等 hash: hash(platform + url + time_bucket)"""
-    now = datetime.utcnow()
-    bucket = now.strftime("%Y%m%d%H") + str(now.minute // time_bucket_min)
+    now = datetime.now(timezone.utc)
+    # bucket = YYYYMMDDHH + bucket_index (e.g., 60min → one bucket per hour)
+    bucket_idx = (now.hour * 60 + now.minute) // time_bucket_min
+    bucket = now.strftime("%Y%m%d") + f"_{bucket_idx}"
     raw = f"{platform}|{url}|{bucket}"
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
@@ -188,7 +190,7 @@ def toggle_keyword(session: Session, keyword_id: int, enabled: bool) -> bool:
 
 def get_active_whitelist(session: Session) -> list[WhitelistRule]:
     """获取有效白名单"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return session.query(WhitelistRule).filter(
         WhitelistRule.status == "ACTIVE",
         (WhitelistRule.expires_at.is_(None)) | (WhitelistRule.expires_at > now),
@@ -237,7 +239,7 @@ def save_cookies(session: Session, platform: str, account_id: str, cookies: list
 
 def get_dashboard_stats(session: Session) -> dict:
     """看板统计"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     total_offers = session.query(func.count(OfferSnapshot.id)).scalar()

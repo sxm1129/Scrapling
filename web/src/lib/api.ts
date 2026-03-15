@@ -1,5 +1,13 @@
 const BASE = '';
 
+export class APIError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export async function fetchAPI(path: string, options?: RequestInit) {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
@@ -8,8 +16,31 @@ export async function fetchAPI(path: string, options?: RequestInit) {
       ...options?.headers,
     },
   });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    let msg = `API error: ${res.status}`;
+    try {
+      const body = await res.json();
+      msg = body.detail || body.error || msg;
+      // Pydantic validation errors
+      if (Array.isArray(body.detail)) {
+        msg = body.detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ');
+      }
+    } catch {}
+    throw new APIError(res.status, msg);
+  }
   return res.json();
+}
+
+/** Show user-friendly error alert */
+export function handleError(e: unknown, context?: string): void {
+  const msg = e instanceof APIError
+    ? (e.status === 422 ? `输入验证失败: ${e.message}` : e.message)
+    : (e instanceof Error ? e.message : '未知错误');
+  const prefix = context ? `${context}: ` : '';
+  console.error(prefix, e);
+  if (typeof window !== 'undefined') {
+    alert(`${prefix}${msg}`);
+  }
 }
 
 export const api = {

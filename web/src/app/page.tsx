@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, handleError } from "@/lib/api";
 
 interface DashboardData {
   total_offers: number;
@@ -26,16 +26,27 @@ export default function DashboardPage() {
   const [recentViolations, setRecentViolations] = useState<any[]>([]);
   const [scanning, setScanning] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    api.getDashboard().then(setData).catch(console.error);
-    api.getViolations({ page_size: "5" }).then((r: any) => setRecentViolations(r.items || [])).catch(console.error);
+    api.getDashboard()
+      .then(setData)
+      .catch((e) => { setError("看板数据加载失败"); console.error(e); });
+    api.getViolations({ page_size: "5" })
+      .then((r: any) => setRecentViolations(r.items || []))
+      .catch(console.error);
   }, []);
 
   const triggerScan = async () => {
     setScanning(true);
-    try { await api.triggerScan(); } catch (e) { console.error(e); }
+    try {
+      await api.triggerScan();
+      alert("扫描任务已触发，请稍后刷新查看结果");
+    } catch (e) { handleError(e, "触发扫描"); }
     setTimeout(() => setScanning(false), 3000);
   };
+
+  if (error) return <div style={{ color: "var(--accent-red)", padding: "2rem" }}>{error}</div>;
 
   if (!data) return <div style={{ color: "var(--text-muted)", padding: "2rem" }}>加载中...</div>;
 
