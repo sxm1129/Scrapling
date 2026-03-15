@@ -13,7 +13,12 @@ export default function WhitelistPage() {
   const handleAdd = async () => {
     if (!form.match_pattern) return;
     try {
-      await api.createWhitelist(form);
+      await api.createWhitelist({
+        ...form,
+        platform: form.platform || undefined,
+        reason: form.reason || undefined,
+        approved_by: form.approved_by || undefined,
+      });
       setForm({ rule_type: "SHOP", match_pattern: "", platform: "", reason: "", approved_by: "" });
       setShowAdd(false);
       load();
@@ -94,8 +99,11 @@ export default function WhitelistPage() {
                   onChange={e => setForm({ ...form, platform: e.target.value })}>
                   <option value="">全部平台</option>
                   <option value="taobao">淘宝</option><option value="tmall">天猫</option>
-                  <option value="jd">京东</option><option value="pinduoduo">拼多多</option>
-                  <option value="taobao_flash">淘宝闪购</option>
+                  <option value="jd_express">京东秒送</option><option value="pinduoduo">拼多多</option>
+                  <option value="taobao_flash">淘宝闪购</option><option value="douyin">抖音</option>
+                  <option value="meituan_flash">美团闪购</option><option value="xiaohongshu">小红书</option>
+                  <option value="community_group">社区团购</option><option value="pupu">朴朴超市</option>
+                  <option value="xiaoxiang">小象超市</option><option value="dingdong">叮咚买菜</option>
                 </select>
               </div>
               <div>

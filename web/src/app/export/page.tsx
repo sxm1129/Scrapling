@@ -24,18 +24,22 @@ export default function ExportPage() {
       const items = data.items || [];
 
       // Convert to CSV
+      const escapeCsv = (val: any) => {
+        const s = String(val ?? "");
+        return /[,"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
       const headers = ["ID", "严重度", "平台", "商品名称", "到手价", "基准价", "差额%", "差额¥", "店铺", "发货城市", "白名单", "链接", "时间"];
       const rows = items.map((v: any) => [
         v.id, v.severity,
         PLATFORM_LABELS[v.platform] || v.platform,
-        `"${(v.product_name || "").replace(/"/g, '""')}"`,
+        escapeCsv(v.product_name || ""),
         v.final_price, v.baseline_price,
         `${(v.gap_percent * 100).toFixed(1)}%`,
         v.gap_value,
-        `"${(v.shop_name || "").replace(/"/g, '""')}"`,
-        v.ship_from_city || "",
+        escapeCsv(v.shop_name || ""),
+        escapeCsv(v.ship_from_city || ""),
         v.is_whitelisted ? "是" : "否",
-        v.canonical_url || "",
+        escapeCsv(v.canonical_url || ""),
         v.created_at || "",
       ]);
 
