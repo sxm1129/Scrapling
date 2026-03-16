@@ -143,15 +143,31 @@ class TaobaoFlashScraper(BaseScraper):
                 if MTOP_SEARCH_PATTERN not in response.url:
                     return
                 try:
-                    body = await response.text()
-                    if len(body) < 5000:
+                    body_bytes = await response.body()
+                    
+                    try:
+                        if body_bytes.startswith(b'\x1f\x8b'):
+                            import gzip
+                            body = gzip.decompress(body_bytes).decode('utf-8', errors='ignore')
+                        else:
+                            enc = response.headers.get("content-encoding", "").lower()
+                            if "br" in enc:
+                                import brotli
+                                body = brotli.decompress(body_bytes).decode('utf-8', errors='ignore')
+                            else:
+                                body = body_bytes.decode('utf-8', errors='ignore')
+                    except Exception:
+                        body = body_bytes.decode('utf-8', errors='ignore')
+
+                    if len(body) < 1000:
                         return
-                    log.info(f"  ⚡ MTOP intercepted: {len(body)} bytes")
+                    
                     items = self._parse_mtop_response(body)
-                    api_items.extend(items)
-                    log.info(f"  解析: {len(items)} items (total: {len(api_items)})")
+                    if items:
+                        log.info(f"  ⚡ MTOP api parsed: {len(items)} items")
+                        api_items.extend(items)
                 except Exception as e:
-                    log.error(f"  MTOP parse error: {e}")
+                    pass
 
             page.on("response", handle_response)
 
