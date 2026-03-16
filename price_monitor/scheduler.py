@@ -44,3 +44,18 @@ async def run_scan_round():
         await manager._run_full_scan(job_id)
     except Exception as e:
         log.error(f"Scheduled scan failed: {e}", exc_info=True)
+
+
+async def run_cookie_keeper():
+    """执行账号 Cookie 保活机制"""
+    from price_monitor.cookie_keeper import CookieKeeper
+    
+    log.info("=" * 60)
+    log.info("Starting scheduled CookieKeeper round...")
+    log.info("=" * 60)
+    
+    try:
+        keeper = CookieKeeper()
+        await keeper.run_keeper()
+    except Exception as e:
+        log.error(f"Scheduled CookieKeeper failed: {e}", exc_info=True)

@@ -42,8 +42,20 @@ def main():
         name=f"Full scan every {scan_interval}h",
         misfire_grace_time=3600,
     )
+    
+    # Cookie 保活调度器: 每一小时跑一次
+    from price_monitor.scheduler import run_cookie_keeper
+    scheduler.add_job(
+        lambda: asyncio.run(run_cookie_keeper()),
+        "interval",
+        hours=1,
+        id="cookie_keeper",
+        name="Cookie Keeper heartbeat loop",
+        misfire_grace_time=3600,
+    )
+    
     scheduler.start()
-    log.info(f"Scheduler started: scan every {scan_interval}h")
+    log.info(f"Scheduler started: scan every {scan_interval}h, keep-alive every 1h")
 
     # 优雅关闭
     def shutdown_handler(signum, frame):
