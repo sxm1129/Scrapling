@@ -556,7 +556,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-15T18:41:34.011185"
+      "last_used": "2026-03-15T22:06:54.395997"
     },
     {
       "id": "taobao_20260315_151707",
@@ -1114,7 +1114,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-15T18:41:25.608351"
+      "last_used": "2026-03-15T22:06:05.910135"
     }
   ],
   "jd_express": [
@@ -1474,8 +1474,8 @@
         }
       ],
       "user_agent": "https://m.jd.com/",
-      "status": "cooldown",
-      "last_used": "2026-03-15T18:33:31.276357",
+      "status": "active",
+      "last_used": "2026-03-15T22:06:28.490088",
       "fail_count": 1,
       "harvested_at": "2026-03-15T16:38:28.513847"
     }
@@ -1587,7 +1587,7 @@
       "status": "active",
       "fail_count": 1,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-15T18:37:30.981626"
+      "last_used": "2026-03-15T22:06:44.662421"
     },
     {
       "id": "pinduoduo_20260315_151932",
@@ -1695,7 +1695,325 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-15T18:33:31.545855"
+      "last_used": "2026-03-15T22:04:54.450641"
+    },
+    {
+      "id": "pinduoduo_20260316_085837",
+      "cookies": [
+        {
+          "name": "api_uid",
+          "value": "CicxTWm3VbqnbACpSjJsAg==",
+          "domain": ".yangkeduo.com",
+          "path": "/",
+          "expires": 1808182714.154302,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_nano_fp",
+          "value": "Xpm8XqExX5man0XYl9_4uTCPLnW0U46wvVE2tEoS",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1808182714.300795,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "webp",
+          "value": "1",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1776214716.93191,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jrpl",
+          "value": "Dc4j80vT3g8RuAvV6booSvQEAm1eJBul",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158717.223208,
+          "httpOnly": true,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "njrpl",
+          "value": "Dc4j80vT3g8RuAvV6booSvQEAm1eJBul",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158717.223239,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dilx",
+          "value": "YMjQFkRVM3C9YWOA5O3um",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158717.223253,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pdd_vds",
+          "value": "gaLhNBtlmxODafnYohtTosGfaxPBnxnrQuoCtByuiePsLdiemfalmdouNBOB",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1774227516.872732,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T08:58:37.864821"
+    },
+    {
+      "id": "pinduoduo_20260316_090009",
+      "cookies": [
+        {
+          "name": "api_uid",
+          "value": "CkvnKWm3VdoDHgBdKbUpAg==",
+          "domain": ".yangkeduo.com",
+          "path": "/",
+          "expires": 1808182746.573598,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_nano_fp",
+          "value": "Xpm8XqExX5mYn5P8lT_SIAZ08r3H3g9GFxvzQ9j3",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1808182746.747951,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "webp",
+          "value": "1",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1776214749.36445,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "jrpl",
+          "value": "OKxdRmpWJSjYeGwhfWHk466Yllu8bGro",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158769.4806,
+          "httpOnly": true,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "njrpl",
+          "value": "OKxdRmpWJSjYeGwhfWHk466Yllu8bGro",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158769.480661,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "dilx",
+          "value": "PJR6QQr5k80v5JEwW8AjX",
+          "domain": ".mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1805158769.480681,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "pdd_vds",
+          "value": "gaLLNytQmaOiGmbLoiPiPPPGyyINbONQnGinntLtnnibQyGQomGnGymtIinO",
+          "domain": "mobile.yangkeduo.com",
+          "path": "/",
+          "expires": 1774227549.30302,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T09:00:09.749199"
+    },
+    {
+      "id": "pinduoduo_20260316_090235",
+      "cookies": [
+        {
+          "domain": ".mobile.yangkeduo.com",
+          "expirationDate": 1805158902.58984,
+          "hostOnly": false,
+          "httpOnly": false,
+          "name": "dilx",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "1ZNH9~vNRj3lYw_gSsxhX",
+          "id": 1
+        },
+        {
+          "domain": ".mobile.yangkeduo.com",
+          "expirationDate": 1805158902.589754,
+          "hostOnly": false,
+          "httpOnly": true,
+          "name": "jrpl",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": true,
+          "session": false,
+          "storeId": "0",
+          "value": "ZZc1xSV8kmykJuubX2y8R8vrgClUjvZ8",
+          "id": 2
+        },
+        {
+          "domain": ".mobile.yangkeduo.com",
+          "expirationDate": 1805158902.589819,
+          "hostOnly": false,
+          "httpOnly": false,
+          "name": "njrpl",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "ZZc1xSV8kmykJuubX2y8R8vrgClUjvZ8",
+          "id": 3
+        },
+        {
+          "domain": ".yangkeduo.com",
+          "expirationDate": 1808182852.132081,
+          "hostOnly": false,
+          "httpOnly": false,
+          "name": "api_uid",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "CilbDWm3VkRt4ACoIEVbAg==",
+          "id": 4
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1808182852.353901,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "_nano_fp",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "Xpm8XqExX5CyX5TjnT_k6OfNKHaa6rVcQvtUPXSR",
+          "id": 5
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1782262902.479648,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "pdd_user_id",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "2013068799",
+          "id": 6
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1782262902.479797,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "pdd_user_uin",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "FVCEAZT7HRKEBLRGS3W2FDW34Y_GEXDA",
+          "id": 7
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1774227702.532631,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "pdd_vds",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "gaLLNytQmaENPPGmmPnmOtomQNmtoEIEbybyIQiLoIELItPbiEyiymNmGnno",
+          "id": 8
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1782262902.47773,
+          "hostOnly": true,
+          "httpOnly": true,
+          "name": "PDDAccessToken",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": true,
+          "session": false,
+          "storeId": "0",
+          "value": "3VNAZLZRJSV4GAEWVKHY5GYTJ4HKPEXQGWRH4IUXET5YB3WQ6P7Q121ff7a",
+          "id": 9
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1773624702.697466,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "rec_list_personal",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "rec_list_personal_z2fms7",
+          "id": 10
+        },
+        {
+          "domain": "mobile.yangkeduo.com",
+          "expirationDate": 1776214902.704688,
+          "hostOnly": true,
+          "httpOnly": false,
+          "name": "webp",
+          "path": "/",
+          "sameSite": "unspecified",
+          "secure": false,
+          "session": false,
+          "storeId": "0",
+          "value": "1",
+          "id": 11
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T09:02:35.256791"
     }
   ],
   "douyin": [
@@ -3107,6 +3425,703 @@
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:27:40",
       "last_used": "2026-03-15T18:41:51.409610"
+    }
+  ],
+  "meituan_flash": [
+    {
+      "id": "meituan_20260316_090834",
+      "cookies": [
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_strategy",
+          "value": "tCfw4c3ZBq",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_random",
+          "value": "tCfw4c3ZBq_26.3486",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1778807311.15676,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wm_order_channel",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776215280,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appVersion",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "swim_line",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776215311,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source",
+          "value": "",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776215311,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appmock",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "igateApp",
+          "value": "igate",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1804727311,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.passport.login.component_strategy",
+          "value": "",
+          "domain": "passport.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "au_trace_key_net",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lx_utm",
+          "value": "utm_source%253D60066",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "iuuid",
+          "value": "ACA1947BD276080880BDF0D2B5EEEAC0E5EE4E156B6510BFC571AD968EFC67E0",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808183311.078634,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.jsprotect.h5guard_strategy",
+          "value": "",
+          "domain": "appsec-mobile.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "WEBDFPID",
+          "value": "2299xzz871zw5716yv1uzz146547wz6x80xu57uzwv7879589yz7w35w-1773709691354-1773623290097AUCCMUM75613c134b6a252faa6802015be905512932",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808183311.252179,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source_rg",
+          "value": "AM%2544MSiSC%25416%2599AAbEEB3ZEnH3ZfCKZaEEZVfHV3nEfbBhbaH3aEnK3B3AHBACE3nQHn",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808183291,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "token",
+          "value": "AgEPJLY7Qk5RXgiUl6JveArHvueK17nACE95_EHEmkKDQTYplJK4OsAQ79-V5-9HGNjFq38tDfjQCgAAAACVMgAAjO2Uh1F7miHGbwNSUJLqETqCtGg6I_cHZI8tnHWu1mIqI7WAaCor5viw7q2Tk9zk",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1789175311.073907,
+          "httpOnly": true,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "mt_c_token",
+          "value": "AgEPJLY7Qk5RXgiUl6JveArHvueK17nACE95_EHEmkKDQTYplJK4OsAQ79-V5-9HGNjFq38tDfjQCgAAAACVMgAAjO2Uh1F7miHGbwNSUJLqETqCtGg6I_cHZI8tnHWu1mIqI7WAaCor5viw7q2Tk9zk",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1789175311.073956,
+          "httpOnly": true,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "oops",
+          "value": "AgEPJLY7Qk5RXgiUl6JveArHvueK17nACE95_EHEmkKDQTYplJK4OsAQ79-V5-9HGNjFq38tDfjQCgAAAACVMgAAjO2Uh1F7miHGbwNSUJLqETqCtGg6I_cHZI8tnHWu1mIqI7WAaCor5viw7q2Tk9zk",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1789175311.073974,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "userId",
+          "value": "38040730",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1789175311.073996,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "logan_session_token",
+          "value": "z8f2r0zryvrd9z7ymnri",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lxsdk_cuid",
+          "value": "19cf42ffc66c8-0a3b16c0d8468f-296e4933-505c8-19cf42ffc66c8",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808183311.462785,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lxsdk",
+          "value": "ACA1947BD276080880BDF0D2B5EEEAC0E5EE4E156B6510BFC571AD968EFC67E0",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808183311.463181,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "openh5_uuid",
+          "value": "ACA1947BD276080880BDF0D2B5EEEAC0E5EE4E156B6510BFC571AD968EFC67E0",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uuid",
+          "value": "ACA1947BD276080880BDF0D2B5EEEAC0E5EE4E156B6510BFC571AD968EFC67E0",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "isIframe",
+          "value": "false",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "showTopHeader",
+          "value": "show",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "isTcMpa",
+          "value": "false",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "userIdCanceled",
+          "value": "0",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "uuidCanceled",
+          "value": "0",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "terminal",
+          "value": "i",
+          "domain": "i.waimai.meituan.com",
+          "path": "/",
+          "expires": 1808183311.778831,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "w_utmz",
+          "value": "\"utm_campaign=(direct)&utm_source=5000&utm_medium=(none)&utm_content=(none)&utm_term=(none)\"",
+          "domain": "i.waimai.meituan.com",
+          "path": "/",
+          "expires": 1808183311.778866,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "w_token",
+          "value": "AgEPJLY7Qk5RXgiUl6JveArHvueK17nACE95_EHEmkKDQTYplJK4OsAQ79-V5-9HGNjFq38tDfjQCgAAAACVMgAAjO2Uh1F7miHGbwNSUJLqETqCtGg6I_cHZI8tnHWu1mIqI7WAaCor5viw7q2Tk9zk",
+          "domain": "i.waimai.meituan.com",
+          "path": "/",
+          "expires": 1808183311.778898,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "openh5_uuid",
+          "value": "ACA1947BD276080880BDF0D2B5EEEAC0E5EE4E156B6510BFC571AD968EFC67E0",
+          "domain": "i.waimai.meituan.com",
+          "path": "/",
+          "expires": 1808183311.77891,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "w_visitid",
+          "value": "785a83df-99c3-468e-8147-32ca9061a935",
+          "domain": "i.waimai.meituan.com",
+          "path": "/",
+          "expires": 1773625111.778884,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lxsdk_s",
+          "value": "19cf42ffc66-f5b-bfb-b3d%7C%7C17",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1773625112,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T09:08:34.773739",
+      "last_used": "2026-03-16T09:21:48.122762"
+    },
+    {
+      "id": "meituan_20260316_092632",
+      "cookies": [
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_strategy",
+          "value": "tCfw4c3ZBq",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_random",
+          "value": "tCfw4c3ZBq_0.3111",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1778808329.269834,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wm_order_channel",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216329,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appVersion",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "swim_line",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216329,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source",
+          "value": "",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216329,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appmock",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "igateApp",
+          "value": "igate",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1804728329,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.passport.login.component_strategy",
+          "value": "",
+          "domain": "passport.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "logan_session_token",
+          "value": "9kd2ikygbm73ovt7hzw5",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "au_trace_key_net",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lx_utm",
+          "value": "utm_source%253D60066",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "iuuid",
+          "value": "62ED51AF21AE5ECEAC7C24AF1FD8CCD9822E43F4B0F57A81A10C33E6BAEA7CE2",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184367.337379,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.jsprotect.h5guard_strategy",
+          "value": "",
+          "domain": "appsec-mobile.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "WEBDFPID",
+          "value": "14xv94362v9v5xu8yz248464v469vwv880xu56uz1vw879585zx6wvv5-1773710738632-1773624337889SGEKKAA75613c134b6a252faa6802015be905511693",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184338.632162,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source_rg",
+          "value": "AM%25a4I.A.K%25428%25bBy3dBkQC3d3KyziJwCBiBQB3BQd373iipyzKQzwb37i4dKiKwyQ733K",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184338,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T09:26:32.467085"
+    },
+    {
+      "id": "meituan_20260316_092825",
+      "cookies": [
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_strategy",
+          "value": "tCfw4c3ZBq",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.wmcapp.openh5.static_random",
+          "value": "tCfw4c3ZBq_73.4369",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1778808441.629511,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "wm_order_channel",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216441,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appVersion",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "swim_line",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216441,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source",
+          "value": "",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1776216441,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "appmock",
+          "value": "null",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "igateApp",
+          "value": "igate",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": 1804728441,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.passport.login.component_strategy",
+          "value": "",
+          "domain": "passport.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "logan_session_token",
+          "value": "4avjqs9bvxnwllnl88f5",
+          "domain": "h5.waimai.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "au_trace_key_net",
+          "value": "default",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "_lx_utm",
+          "value": "utm_source%253D60066",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "iuuid",
+          "value": "A682B4152311206A93AC2DC4114EA8C881DA149A33B02F283E68BEE17AE7B840",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184475.633237,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "com.sankuai.jsprotect.h5guard_strategy",
+          "value": "",
+          "domain": "appsec-mobile.meituan.com",
+          "path": "/",
+          "expires": -1,
+          "httpOnly": false,
+          "secure": true,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "WEBDFPID",
+          "value": "21v217w1z2u55w1z1x2y3wyx1u89y5z880xu55837u887958925097u6-1773710851789-1773624450854QUCQOKO75613c134b6a252faa6802015be905511144",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184451.789956,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        },
+        {
+          "name": "utm_source_rg",
+          "value": "AM%2519FsLsZ%25265%25uk0ukxTk7uIzzTk7khuPOTPhkImfPz7mm1hIzzmOxImmxfzmfuz1fxIF",
+          "domain": ".meituan.com",
+          "path": "/",
+          "expires": 1808184451,
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax"
+        }
+      ],
+      "status": "active",
+      "fail_count": 0,
+      "harvested_at": "2026-03-16T09:28:25.589678"
     }
   ]
 }
