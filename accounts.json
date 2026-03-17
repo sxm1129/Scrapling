@@ -556,7 +556,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-17T10:06:29.732772"
+      "last_used": "2026-03-17T18:30:40.484738"
     },
     {
       "id": "taobao_20260315_151707",
@@ -1474,9 +1474,9 @@
         }
       ],
       "user_agent": "https://m.jd.com/",
-      "status": "active",
-      "last_used": "2026-03-17T10:06:45.264447",
-      "fail_count": 1,
+      "status": "cooldown",
+      "last_used": "2026-03-17T18:30:00.819295",
+      "fail_count": 2,
       "harvested_at": "2026-03-15T16:38:28.513847"
     }
   ],
@@ -1695,7 +1695,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:21",
-      "last_used": "2026-03-15T22:04:54.450641"
+      "last_used": "2026-03-17T18:31:34.586967"
     },
     {
       "id": "pinduoduo_20260316_085837",
@@ -2098,7 +2098,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:22",
-      "last_used": "2026-03-15T16:52:05.027681"
+      "last_used": "2026-03-17T18:30:51.434310"
     }
   ],
   "xiaohongshu": [
@@ -2163,7 +2163,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:23:22",
-      "last_used": "2026-03-15T16:52:08.104052"
+      "last_used": "2026-03-17T18:30:54.682856"
     }
   ],
   "taobao_flash": [
@@ -2868,7 +2868,7 @@
       "status": "active",
       "fail_count": 0,
       "harvested_at": "2026-03-15T15:27:40",
-      "last_used": "2026-03-15T18:38:09.147719"
+      "last_used": "2026-03-17T18:30:46.110854"
     },
     {
       "id": "tmall_main",

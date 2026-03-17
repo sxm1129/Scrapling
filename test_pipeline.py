@@ -12,7 +12,7 @@ async def main():
     session = factory()
     
     try:
-        offers = await cm._scrape_one("jd_express", "iPhone 15", session)
+        offers = await cm._scrape_one("jd_express", "iPhone 15")
         print(f"Scrape finished. Found {len(offers)} offers.")
         for o in offers:
             print(f"Name: {o.product_name}")
