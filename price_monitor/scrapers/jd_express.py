@@ -176,6 +176,19 @@ class JDExpressScraper(BaseScraper):
             except Exception as e:
                 log.error(f"JS data extraction error: {e}")
 
+            # 通过 Regex 提取 window._itemOnly
+            try:
+                content = await page.content()
+                import re, json
+                match = re.search(r'window\._itemOnly\s*=\s*(.*?);\s*window\.', content, re.DOTALL)
+                if match:
+                    json_text = match.group(1).strip()
+                    if json_text.startswith('('): json_text = json_text[1:-1]
+                    item_data = json.loads(json_text).get("item", {})
+                    extracted_data["_itemOnly"] = item_data
+            except Exception as e:
+                log.error(f"SSR extract error: {e}")
+
         # 从账号池获取 Cookie
         cookies = None
         account_id = None
@@ -245,7 +258,9 @@ class JDExpressScraper(BaseScraper):
 
         # 商品名称 (取最长的 h1 文本, 跳过短标签如 "就是便宜")
         titles = data.get("titles", [])
-        if titles:
+        if data.get("_itemOnly", {}).get("skuName"):
+            result.product_name = data["_itemOnly"]["skuName"]
+        elif titles:
             result.product_name = max(titles, key=len)
 
         # 价格提取 (优先从 price_elements, 不够则回退到 price_lines)
@@ -284,10 +299,11 @@ class JDExpressScraper(BaseScraper):
 
         # 店铺名称 (去重, 取包含品牌信息的最短文本)
         shops = list(set(data.get("shops", [])))
-        # 过滤掉纯导航文本
-        shops = [s for s in shops if s not in ("店铺", "门店", "关注") and len(s) < 30]
-        if shops:
-            # 优先取包含品牌关键词的
+        # 优先读取 _itemOnly 的 vanderName 或 brandName
+        if data.get("_itemOnly", {}).get("brandName"):
+            result.shop_name = data["_itemOnly"]["brandName"] + "旗舰店"  # 推测
+        elif shops:
+            shops = [s for s in shops if s not in ("店铺", "门店", "关注") and len(s) < 30]
             brand_shops = [s for s in shops if not s.startswith("关注")]
             result.shop_name = brand_shops[0] if brand_shops else shops[0]
 
@@ -455,8 +471,13 @@ class JDExpressScraper(BaseScraper):
                     "[class*='goods-title'], [class*='sku-name'], [class*='title'], [class*='name'], h3, h2"
                 );
                 if (titleEl) title = titleEl.innerText.trim().slice(0, 120);
+                
+                let shop = "";
+                const shopEl = card.querySelector("[class*='shop'], [class*='store'], [class*='seller'], [class*='shop-name']");
+                if (shopEl) shop = shopEl.innerText.trim().slice(0, 60);
+
                 if (!price && !title) continue;
-                items.push({ sku_id, price, title });
+                items.push({ sku_id, price, title, shop });
             }
 
             // 3. 如果 DOM 取不到, 做文本行解析 (备用)
@@ -591,6 +612,7 @@ class JDExpressScraper(BaseScraper):
                 product_name=title,
                 current_price=price,
                 final_price=price,
+                shop_name=item.get("shop", "").strip(),
                 product_url=f"https://item.m.jd.com/product/{sku_id}.html" if sku_id else search_url,
                 scraped_at=datetime.now(timezone.utc).isoformat(),
             )
