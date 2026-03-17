@@ -79,14 +79,17 @@ async def run_sla_check():
             log.warning(f"Escalated {count} overdue workorders: {escalated_ids}")
             # Send Feishu alerts ONLY for WOs escalated THIS round
             for wo_id in escalated_ids:
-                wo = crud.get_workorder(session, wo_id)
-                if wo:
-                    wo_dict = {
-                        "id": wo.id, "severity": wo.severity,
-                        "owner_name": wo.owner_name, "product_name": wo.product_name,
-                        "escalation_level": wo.escalation_level,
-                    }
-                    feishu_notify.send_sla_escalation(wo_dict)
+                try:
+                    wo = crud.get_workorder(session, wo_id)
+                    if wo:
+                        wo_dict = {
+                            "id": wo.id, "severity": wo.severity,
+                            "owner_name": wo.owner_name, "product_name": wo.product_name,
+                            "escalation_level": wo.escalation_level,
+                        }
+                        feishu_notify.send_sla_escalation(wo_dict)
+                except Exception as notify_e:
+                    log.error(f"Failed to send SLA config for WO {wo_id}: {notify_e}")
     except Exception as e:
         log.error(f"SLA check failed: {e}", exc_info=True)
     finally:

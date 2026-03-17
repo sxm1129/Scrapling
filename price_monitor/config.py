@@ -108,15 +108,23 @@ class Config:
         """从环境变量加载配置 (优先级最高)"""
         config = cls()
 
+        def _safe_int(val, default_val):
+            if val is None or str(val).strip() == "":
+                return default_val
+            try:
+                return int(val)
+            except ValueError:
+                return default_val
+
         # Storage — primary env var names match .env (DB_*), PM_MYSQL_* overrides
         config.storage.mysql_host = os.getenv("PM_MYSQL_HOST", os.getenv("DB_HOST", config.storage.mysql_host))
-        config.storage.mysql_port = int(os.getenv("PM_MYSQL_PORT", os.getenv("DB_PORT", str(config.storage.mysql_port))))
+        config.storage.mysql_port = _safe_int(os.getenv("PM_MYSQL_PORT", os.getenv("DB_PORT", "")), config.storage.mysql_port)
         config.storage.mysql_user = os.getenv("PM_MYSQL_USER", os.getenv("DB_USER", config.storage.mysql_user))
         config.storage.mysql_password = os.getenv("PM_MYSQL_PASSWORD", os.getenv("DB_PASSWORD", config.storage.mysql_password))
         config.storage.mysql_database = os.getenv("PM_MYSQL_DATABASE", os.getenv("DB_NAME", config.storage.mysql_database))
 
         config.storage.redis_host = os.getenv("PM_REDIS_HOST", config.storage.redis_host)
-        config.storage.redis_port = int(os.getenv("PM_REDIS_PORT", str(config.storage.redis_port)))
+        config.storage.redis_port = _safe_int(os.getenv("PM_REDIS_PORT", ""), config.storage.redis_port)
         config.storage.redis_password = os.getenv("PM_REDIS_PASSWORD", config.storage.redis_password)
 
         config.storage.oss_endpoint = os.getenv("PM_OSS_ENDPOINT", config.storage.oss_endpoint)

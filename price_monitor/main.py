@@ -36,6 +36,7 @@ def main():
     def _run_async(coro_fn, *args):
         import asyncio
         loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(coro_fn(*args))
         finally:
@@ -89,14 +90,6 @@ def main():
 
     scheduler.start()
     log.info(f"Scheduler started: scan every {scan_interval}h | keep-alive every 1h | SLA check every 30min | weekly report on {report_dow} {report_hour}:00")
-
-    # 优雅关闭
-    def shutdown_handler(signum, frame):
-        log.info("Received shutdown signal, stopping scheduler...")
-        scheduler.shutdown(wait=False)
-        sys.exit(0)
-    signal.signal(signal.SIGINT, shutdown_handler)
-    signal.signal(signal.SIGTERM, shutdown_handler)
 
     # 启动 FastAPI
     log.info(f"Starting API server on port {api_port}...")
