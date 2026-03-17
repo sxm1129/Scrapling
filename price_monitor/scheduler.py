@@ -107,7 +107,7 @@ async def run_periodic_report(report_type: str = "WEEKLY"):
     factory = get_session_factory()
     session = factory()
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()  # Naive UTC for MySQL DATETIME comparisons
         days = 7 if report_type == "WEEKLY" else 30
         start = now - timedelta(days=days)
         kpis = reporting_engine.generate_kpis(session, start, now)

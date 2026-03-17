@@ -20,7 +20,7 @@ from price_monitor.db.models import (
 
 def make_offer_hash(platform: str, url: str, time_bucket_min: int = 60) -> str:
     """生成 offer 幂等 hash: hash(platform + url + time_bucket)"""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()  # Naive UTC for consistent hashing
     # bucket = YYYYMMDDHH + bucket_index (e.g., 60min → one bucket per hour)
     bucket_idx = (now.hour * 60 + now.minute) // time_bucket_min
     bucket = now.strftime("%Y%m%d") + f"_{bucket_idx}"
@@ -434,7 +434,7 @@ def update_workorder(session: Session, wo_id: int, updates: dict) -> Optional[Wo
         return None
     for k, v in updates.items():
         setattr(wo, k, v)
-    wo.updated_at = datetime.now(timezone.utc)
+    wo.updated_at = datetime.utcnow()  # Naive UTC for MySQL DATETIME
     session.flush()
     return wo
 
@@ -445,10 +445,10 @@ def append_workorder_action(session: Session, wo_id: int, action: dict) -> Optio
     if not wo:
         return None
     log = list(wo.action_log or [])
-    action.setdefault("at", datetime.now(timezone.utc).isoformat())
+    action.setdefault("at", datetime.utcnow().isoformat())  # Naive UTC isoformat for JSON display
     log.append(action)
     wo.action_log = log
-    wo.updated_at = datetime.now(timezone.utc)
+    wo.updated_at = datetime.utcnow()  # Naive UTC for MySQL DATETIME
     session.flush()
     return wo
 

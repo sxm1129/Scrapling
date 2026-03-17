@@ -45,8 +45,18 @@ def main():
     
     # Cookie 保活调度器: 每一小时跑一次
     from price_monitor.scheduler import run_cookie_keeper, run_sla_check, run_periodic_report
+
+    # BackgroundScheduler runs in threads; create a fresh event loop per invocation
+    def _run_async(coro_fn, *args):
+        import asyncio
+        loop = asyncio.new_event_loop()
+        try:
+            loop.run_until_complete(coro_fn(*args))
+        finally:
+            loop.close()
+
     scheduler.add_job(
-        lambda: asyncio.run(run_cookie_keeper()),
+        lambda: _run_async(run_cookie_keeper),
         "interval",
         hours=1,
         id="cookie_keeper",
@@ -56,7 +66,7 @@ def main():
 
     # SLA 超时升级轮询: 每 30 分钟
     scheduler.add_job(
-        lambda: asyncio.run(run_sla_check()),
+        lambda: _run_async(run_sla_check),
         "interval",
         minutes=30,
         id="sla_check",
@@ -64,11 +74,11 @@ def main():
         misfire_grace_time=600,
     )
 
-    # 定期报表: 每周一 08:00 (可通过 REPORT_CRON_DAY_OF_WEEK / REPORT_CRON_HOUR 配置)
+    # 定期报表: 每周一 08:00 (可通过 REPORT_CRON_DOW / REPORT_CRON_HOUR 配置)
     report_dow = os.getenv("REPORT_CRON_DOW", "mon")
     report_hour = int(os.getenv("REPORT_CRON_HOUR", "8"))
     scheduler.add_job(
-        lambda: asyncio.run(run_periodic_report("WEEKLY")),
+        lambda: _run_async(run_periodic_report, "WEEKLY"),
         "cron",
         day_of_week=report_dow,
         hour=report_hour,

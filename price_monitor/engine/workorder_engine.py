@@ -151,7 +151,7 @@ def resolve_workorder(
     """关闭工单，并追加复核调度标记"""
     updates = {
         "status": "RESOLVED",
-        "resolved_at": datetime.now(timezone.utc),
+        "resolved_at": datetime.utcnow(),  # Naive UTC for MySQL DATETIME
         "resolution_note": note,
         "resolution_type": resolution_type,
     }

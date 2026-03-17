@@ -28,7 +28,7 @@ def get_db():
 
 
 def _parse_dates(start_str: Optional[str], end_str: Optional[str], default_days: int = 7):
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()  # Naive UTC for MySQL DATETIME comparisons
     end = datetime.fromisoformat(end_str) if end_str else now
     start = datetime.fromisoformat(start_str) if start_str else now - timedelta(days=default_days)
     return start, end
@@ -114,7 +114,7 @@ def generate_report(body: GenerateReportBody, db: Session = Depends(get_db)):
                 kpis=kpis,
                 webhook_url=body.feishu_webhook_url,
             )
-            crud.update_periodic_report(db, report.id, {"pushed_at": datetime.now(timezone.utc)})
+            crud.update_periodic_report(db, report.id, {"pushed_at": datetime.utcnow()})
             db.commit()
 
         return {"report_id": report.id, "status": "DONE", "kpis": kpis}
