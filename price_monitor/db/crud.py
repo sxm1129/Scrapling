@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from price_monitor.db.models import (
     OfferSnapshot, Violation, BaselinePrice,
     SearchKeyword, WhitelistRule, CookieAccount, ScrapeJob,
+    WorkOrder, ResponsibilityRule, PeriodicReport,
 )
 
 
@@ -384,3 +385,130 @@ def get_latest_jobs_by_platform(session: Session) -> list[ScrapeJob]:
         subq, ScrapeJob.id == subq.c.max_id,
     ).all()
 
+
+# ── WorkOrder ──
+
+def create_workorder(session: Session, data: dict) -> WorkOrder:
+    """创建工单"""
+    wo = WorkOrder(**data)
+    if wo.action_log is None:
+        wo.action_log = []
+    session.add(wo)
+    session.flush()
+    return wo
+
+
+def get_workorder(session: Session, wo_id: int) -> Optional[WorkOrder]:
+    return session.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
+
+
+def list_workorders(
+    session: Session,
+    status: str = None,
+    severity: str = None,
+    owner_user_id: str = None,
+    platform: str = None,
+    sla_due_before: datetime = None,
+    page: int = 1,
+    page_size: int = 50,
+) -> tuple[list[WorkOrder], int]:
+    q = session.query(WorkOrder)
+    if status:
+        q = q.filter(WorkOrder.status == status)
+    if severity:
+        q = q.filter(WorkOrder.severity == severity)
+    if owner_user_id:
+        q = q.filter(WorkOrder.owner_user_id == owner_user_id)
+    if platform:
+        q = q.filter(WorkOrder.platform == platform)
+    if sla_due_before:
+        q = q.filter(WorkOrder.sla_due_at <= sla_due_before)
+    total = q.count()
+    items = q.order_by(desc(WorkOrder.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    return items, total
+
+
+def update_workorder(session: Session, wo_id: int, updates: dict) -> Optional[WorkOrder]:
+    wo = get_workorder(session, wo_id)
+    if not wo:
+        return None
+    for k, v in updates.items():
+        setattr(wo, k, v)
+    wo.updated_at = datetime.now(timezone.utc)
+    session.flush()
+    return wo
+
+
+def append_workorder_action(session: Session, wo_id: int, action: dict) -> Optional[WorkOrder]:
+    """追加操作日志（不可变审计）"""
+    wo = get_workorder(session, wo_id)
+    if not wo:
+        return None
+    log = list(wo.action_log or [])
+    action.setdefault("at", datetime.now(timezone.utc).isoformat())
+    log.append(action)
+    wo.action_log = log
+    wo.updated_at = datetime.now(timezone.utc)
+    session.flush()
+    return wo
+
+
+def list_open_workorders_overdue(session: Session) -> list[WorkOrder]:
+    """查询所有已超 SLA 的开放工单"""
+    now = datetime.now(timezone.utc)
+    return session.query(WorkOrder).filter(
+        WorkOrder.status.in_(["OPEN", "IN_PROGRESS"]),
+        WorkOrder.sla_due_at <= now,
+    ).all()
+
+
+# ── ResponsibilityRule ──
+
+def list_responsibility_rules(session: Session, platform: str = None, active_only: bool = True) -> list[ResponsibilityRule]:
+    q = session.query(ResponsibilityRule)
+    if active_only:
+        q = q.filter(ResponsibilityRule.is_active == True)
+    if platform:
+        q = q.filter((ResponsibilityRule.platform == platform) | (ResponsibilityRule.platform == None))
+    return q.order_by(desc(ResponsibilityRule.priority)).all()
+
+
+def create_responsibility_rule(session: Session, data: dict) -> ResponsibilityRule:
+    rule = ResponsibilityRule(**data)
+    session.add(rule)
+    session.flush()
+    return rule
+
+
+def delete_responsibility_rule(session: Session, rule_id: int) -> bool:
+    rule = session.query(ResponsibilityRule).filter(ResponsibilityRule.id == rule_id).first()
+    if rule:
+        rule.is_active = False
+        session.flush()
+        return True
+    return False
+
+
+# ── PeriodicReport ──
+
+def create_periodic_report(session: Session, data: dict) -> PeriodicReport:
+    report = PeriodicReport(**data)
+    session.add(report)
+    session.flush()
+    return report
+
+
+def update_periodic_report(session: Session, report_id: int, updates: dict) -> Optional[PeriodicReport]:
+    report = session.query(PeriodicReport).filter(PeriodicReport.id == report_id).first()
+    if report:
+        for k, v in updates.items():
+            setattr(report, k, v)
+        session.flush()
+    return report
+
+
+def list_periodic_reports(session: Session, page: int = 1, page_size: int = 20) -> tuple[list[PeriodicReport], int]:
+    q = session.query(PeriodicReport).order_by(desc(PeriodicReport.created_at))
+    total = q.count()
+    items = q.offset((page - 1) * page_size).limit(page_size).all()
+    return items, total

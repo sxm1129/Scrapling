@@ -108,6 +108,14 @@ app.include_router(collection_router)
 from price_monitor.api.cookie_api import router as cookie_router
 app.include_router(cookie_router)
 
+# 工单管理路由
+from price_monitor.api.workorder_api import router as workorder_router
+app.include_router(workorder_router)
+
+# 报表路由
+from price_monitor.api.reporting_api import router as reporting_router
+app.include_router(reporting_router)
+
 
 # ── 全局异常处理 ──
 

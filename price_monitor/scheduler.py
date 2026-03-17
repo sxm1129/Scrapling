@@ -59,3 +59,81 @@ async def run_cookie_keeper():
         await keeper.run_keeper()
     except Exception as e:
         log.error(f"Scheduled CookieKeeper failed: {e}", exc_info=True)
+
+
+async def run_sla_check():
+    """检查所有超期工单，触发升级 + 飞书通知"""
+    from price_monitor.engine.workorder_engine import check_sla_escalations
+    from price_monitor.db.session import get_session_factory
+    from price_monitor.db import crud
+    from price_monitor.notify import feishu as feishu_notify
+
+    log.info("Starting SLA escalation check...")
+    factory = get_session_factory()
+    session = factory()
+    try:
+        count = check_sla_escalations(session)
+        if count:
+            log.warning(f"Escalated {count} overdue workorders")
+            # Send Feishu alerts for escalated WOs
+            escalated = crud.list_workorders(session, status="OPEN")[0] + crud.list_workorders(session, status="IN_PROGRESS")[0]
+            for wo in escalated:
+                if wo.escalation_level > 0:
+                    wo_dict = {
+                        "id": wo.id, "severity": wo.severity,
+                        "owner_name": wo.owner_name, "product_name": wo.product_name,
+                        "escalation_level": wo.escalation_level,
+                    }
+                    feishu_notify.send_sla_escalation(wo_dict)
+    except Exception as e:
+        log.error(f"SLA check failed: {e}", exc_info=True)
+    finally:
+        session.close()
+    log.info(f"SLA check done, escalated: {count if 'count' in dir() else 0}")
+
+
+async def run_periodic_report(report_type: str = "WEEKLY"):
+    """生成周报并推送到飞书"""
+    from datetime import datetime, timezone, timedelta
+    from price_monitor.engine import reporting_engine
+    from price_monitor.db.session import get_session_factory
+    from price_monitor.db import crud
+    from price_monitor.notify import feishu as feishu_notify
+    import os
+
+    log.info(f"Generating {report_type} report...")
+    factory = get_session_factory()
+    session = factory()
+    try:
+        now = datetime.now(timezone.utc)
+        days = 7 if report_type == "WEEKLY" else 30
+        start = now - timedelta(days=days)
+        kpis = reporting_engine.generate_kpis(session, start, now)
+
+        report_data = {
+            "report_type": report_type,
+            "start_date": start,
+            "end_date": now,
+            "status": "DONE",
+            "kpi_snapshot": kpis,
+            "triggered_by": "scheduler",
+            "feishu_webhook_url": os.getenv("FEISHU_WEBHOOK_URL", ""),
+        }
+        report = crud.create_periodic_report(session, report_data)
+        session.commit()
+
+        # Push to Feishu
+        webhook = os.getenv("FEISHU_WEBHOOK_URL", "")
+        if webhook:
+            feishu_notify.send_report_ready(
+                report={"id": report.id, "start_date": start, "end_date": now},
+                kpis=kpis,
+                webhook_url=webhook,
+            )
+            crud.update_periodic_report(session, report.id, {"pushed_at": now})
+            session.commit()
+        log.info(f"Periodic report #{report.id} generated and pushed.")
+    except Exception as e:
+        log.error(f"Periodic report failed: {e}", exc_info=True)
+    finally:
+        session.close()

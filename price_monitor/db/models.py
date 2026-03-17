@@ -170,3 +170,82 @@ class ScrapeJob(Base):
     __table_args__ = (
         Index("idx_job_status_time", "status", "created_at"),
     )
+
+
+class WorkOrder(Base):
+    """工单 — 违规处置闭环"""
+    __tablename__ = "work_orders"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    violation_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("violations.id"), nullable=False, index=True)
+    owner_user_id: Mapped[Optional[str]] = mapped_column(String(100), index=True, comment="责任人ID，None=未分配")
+    owner_name: Mapped[Optional[str]] = mapped_column(String(100), comment="责任人姓名（冗余方便展示）")
+    dealer_name: Mapped[Optional[str]] = mapped_column(String(100), comment="经销商名称")
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="OPEN", index=True,
+        comment="OPEN|IN_PROGRESS|WAITING_INFO|RESOLVED|REJECTED"
+    )
+    severity: Mapped[str] = mapped_column(String(5), nullable=False, default="P1", comment="P0/P1/P2")
+    platform: Mapped[Optional[str]] = mapped_column(String(20), index=True)
+    product_name: Mapped[Optional[str]] = mapped_column(String(300))
+    violation_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), comment="违规价格")
+    baseline_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), comment="基准价")
+    gap_percent: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4))
+    canonical_url: Mapped[Optional[str]] = mapped_column(String(500))
+    screenshot_path: Mapped[Optional[str]] = mapped_column(String(500))
+    escalation_level: Mapped[int] = mapped_column(Integer, default=0, comment="0=未升级，1=一级升级，...")
+    reoccur_count: Mapped[int] = mapped_column(Integer, default=0, comment="复发次数")
+    action_log: Mapped[Optional[list]] = mapped_column(JSON, default=list, comment="操作日志列表")
+    sla_due_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="SLA截止时间")
+    notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="首次飞书通知时间")
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    resolution_note: Mapped[Optional[str]] = mapped_column(Text)
+    resolution_type: Mapped[Optional[str]] = mapped_column(String(50), comment="PRICE_FIXED|LINK_REMOVED|WHITELIST_ADDED|OTHER")
+    recheck_offer_id: Mapped[Optional[int]] = mapped_column(BigInteger, comment="复核时关联的新 offer_id")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_wo_status_sla", "status", "sla_due_at"),
+        Index("idx_wo_owner_status", "owner_user_id", "status"),
+    )
+
+
+class ResponsibilityRule(Base):
+    """责任归因规则表 — 店铺/城市 → 经销商 → 责任人"""
+    __tablename__ = "responsibility_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    platform: Mapped[Optional[str]] = mapped_column(String(20), comment="平台过滤（None=任意）")
+    shop_name_pattern: Mapped[Optional[str]] = mapped_column(String(200), comment="店铺名包含匹配，支持多关键词空格分隔")
+    ship_from_city: Mapped[Optional[str]] = mapped_column(String(50), comment="发货城市匹配（None=任意）")
+    dealer_name: Mapped[str] = mapped_column(String(100), nullable=False, comment="经销商名称")
+    owner_user_id: Mapped[str] = mapped_column(String(100), nullable=False, comment="责任人ID（飞书/企业用户ID）")
+    owner_name: Mapped[str] = mapped_column(String(100), nullable=False, comment="责任人姓名")
+    owner_feishu_id: Mapped[Optional[str]] = mapped_column(String(100), comment="飞书 open_id（@用户通知）")
+    priority: Mapped[int] = mapped_column(Integer, default=0, comment="数字越大越优先，相同时取第一个")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    note: Mapped[Optional[str]] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_rule_platform_active", "platform", "is_active"),
+    )
+
+
+class PeriodicReport(Base):
+    """定期报表记录"""
+    __tablename__ = "periodic_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    report_type: Mapped[str] = mapped_column(String(20), nullable=False, comment="WEEKLY|MONTHLY|CUSTOM")
+    start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="PENDING", comment="PENDING|DONE|FAILED")
+    kpi_snapshot: Mapped[Optional[dict]] = mapped_column(JSON, comment="生成时的KPI快照JSON")
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), comment="生成的HTML/PDF路径")
+    feishu_webhook_url: Mapped[Optional[str]] = mapped_column(String(500))
+    pushed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="推送到飞书时间")
+    triggered_by: Mapped[str] = mapped_column(String(50), default="scheduler")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

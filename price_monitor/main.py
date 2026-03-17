@@ -44,7 +44,7 @@ def main():
     )
     
     # Cookie 保活调度器: 每一小时跑一次
-    from price_monitor.scheduler import run_cookie_keeper
+    from price_monitor.scheduler import run_cookie_keeper, run_sla_check, run_periodic_report
     scheduler.add_job(
         lambda: asyncio.run(run_cookie_keeper()),
         "interval",
@@ -53,9 +53,32 @@ def main():
         name="Cookie Keeper heartbeat loop",
         misfire_grace_time=3600,
     )
-    
+
+    # SLA 超时升级轮询: 每 30 分钟
+    scheduler.add_job(
+        lambda: asyncio.run(run_sla_check()),
+        "interval",
+        minutes=30,
+        id="sla_check",
+        name="SLA escalation check every 30min",
+        misfire_grace_time=600,
+    )
+
+    # 定期报表: 每周一 08:00 (可通过 REPORT_CRON_DAY_OF_WEEK / REPORT_CRON_HOUR 配置)
+    report_dow = os.getenv("REPORT_CRON_DOW", "mon")
+    report_hour = int(os.getenv("REPORT_CRON_HOUR", "8"))
+    scheduler.add_job(
+        lambda: asyncio.run(run_periodic_report("WEEKLY")),
+        "cron",
+        day_of_week=report_dow,
+        hour=report_hour,
+        id="weekly_report",
+        name=f"Weekly report every {report_dow} {report_hour}:00",
+        misfire_grace_time=3600,
+    )
+
     scheduler.start()
-    log.info(f"Scheduler started: scan every {scan_interval}h, keep-alive every 1h")
+    log.info(f"Scheduler started: scan every {scan_interval}h | keep-alive every 1h | SLA check every 30min | weekly report on {report_dow} {report_hour}:00")
 
     # 优雅关闭
     def shutdown_handler(signum, frame):

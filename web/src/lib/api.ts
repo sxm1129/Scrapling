@@ -156,4 +156,46 @@ export const api = {
     }),
   harvestCookie: (platform: string) =>
     fetchAPI(`/api/cookie-mgmt/harvest/${platform}`, { method: 'POST' }),
+
+  // WorkOrders
+  getWorkOrders: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/v1/workorders${qs}`);
+  },
+  getWorkOrder: (id: number) => fetchAPI(`/api/v1/workorders/${id}`),
+  updateWorkOrder: (id: number, data: any) =>
+    fetchAPI(`/api/v1/workorders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  addWorkOrderAction: (id: number, data: any) =>
+    fetchAPI(`/api/v1/workorders/${id}/actions`, { method: 'POST', body: JSON.stringify(data) }),
+  resolveWorkOrder: (id: number, data: any) =>
+    fetchAPI(`/api/v1/workorders/${id}/resolve`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // Responsibility Rules
+  getResponsibilityRules: (platform?: string) =>
+    fetchAPI(`/api/v1/responsibility-rules${platform ? `?platform=${platform}` : ''}`),
+  createResponsibilityRule: (data: any) =>
+    fetchAPI('/api/v1/responsibility-rules', { method: 'POST', body: JSON.stringify(data) }),
+  deleteResponsibilityRule: (id: number) =>
+    fetchAPI(`/api/v1/responsibility-rules/${id}`, { method: 'DELETE' }),
+
+  // Reporting
+  getKPIs: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/v1/reports/kpi${qs}`);
+  },
+  getTrends: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/v1/reports/trends${qs}`);
+  },
+  getTopViolators: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/v1/reports/top-violators${qs}`);
+  },
+  generateReport: (data: any) =>
+    fetchAPI('/api/v1/reports/generate', { method: 'POST', body: JSON.stringify(data) }),
+  listReports: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/v1/reports${qs}`);
+  },
+  getReport: (id: number) => fetchAPI(`/api/v1/reports/${id}`),
 };
