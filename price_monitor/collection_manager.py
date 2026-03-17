@@ -187,55 +187,60 @@ class CollectionManager:
     async def _run_full_scan(self, job_id: int, keyword: str = None):
         """执行全量扫描"""
         factory = get_session_factory()
-        session = factory()
         _active_jobs[job_id] = False  # not cancelled
         start_time = time.time()
 
-        try:
-            # 标记开始
-            crud.update_job_status(
-                session, job_id, "RUNNING",
-                started_at=datetime.utcnow(),
-            )
-            session.commit()
-
-            # 获取关键词
-            keywords_objs = crud.get_active_keywords(session)
-            if keyword:
-                keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
-            if not keywords_objs:
+        with factory() as session:
+            try:
+                # 标记开始
                 crud.update_job_status(
-                    session, job_id, "SUCCESS",
-                    finished_at=datetime.utcnow(),
-                    error_message="No active keywords found",
+                    session, job_id, "RUNNING",
+                    started_at=datetime.utcnow(),
                 )
                 session.commit()
+
+                # 获取关键词
+                keywords_objs = crud.get_active_keywords(session)
+                if keyword:
+                    keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
+                if not keywords_objs:
+                    crud.update_job_status(
+                        session, job_id, "SUCCESS",
+                        finished_at=datetime.utcnow(),
+                        error_message="No active keywords found",
+                    )
+                    session.commit()
+                    return
+                keywords_list = [k.keyword for k in keywords_objs]
+            except Exception as e:
+                log.error(f"[Job:{job_id}] Init failed: {e}")
                 return
 
-            platforms = list_supported_platforms()
-            total_steps = len(keywords_objs) * len(platforms)
-            step = 0
-            total_offers = 0
-            total_violations = 0
-            total_fails = 0
-            total_p0 = 0
-            total_p1 = 0
+        platforms = list_supported_platforms()
+        total_steps = len(keywords_list) * len(platforms)
+        step = 0
+        total_offers = 0
+        total_violations = 0
+        total_fails = 0
+        total_p0 = 0
+        total_p1 = 0
 
-            for kw_obj in keywords_objs:
-                kw = kw_obj.keyword
+        try:
+            for kw in keywords_list:
                 log.info(f"[Job:{job_id}] Scanning keyword: {kw}")
                 kw_offers = []
 
                 for plat in platforms:
-                    job_record = crud.get_job(session, job_id)
-                    if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
-                        raise asyncio.CancelledError("Job cancelled by user")
+                    with factory() as session:
+                        job_record = crud.get_job(session, job_id)
+                        if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
+                            raise asyncio.CancelledError("Job cancelled by user")
 
                     step += 1
                     progress = int(step / total_steps * 100)
 
                     try:
-                        offers = await self._scrape_one(plat, kw, session)
+                        offers = await self._scrape_one(plat, kw)
                         kw_offers.extend(offers)
                         log.info(f"  [{plat}] {len(offers)} offers")
                     except Exception as e:
@@ -243,55 +248,66 @@ class CollectionManager:
                         log.error(f"  [{plat}] Scrape failed: {e}")
 
                     # 更新进度
-                    crud.update_job_progress(
-                        session, job_id,
-                        progress=progress,
-                        success_items=total_offers + len(kw_offers),
-                        fail_items=total_fails,
-                        total_items=total_steps,
-                    )
-                    session.commit()
+                    with factory() as session:
+                        try:
+                            crud.update_job_progress(
+                                session, job_id,
+                                progress=progress,
+                                success_items=total_offers + len(kw_offers),
+                                fail_items=total_fails,
+                                total_items=total_steps,
+                            )
+                            session.commit()
+                        except Exception as e:
+                            log.error(f"  Failed to update progress: {e}")
 
                 # 写入 DB + 违规判定
                 if kw_offers:
-                    session.add_all(kw_offers)
-                    session.commit()
+                    with factory() as session:
+                        try:
+                            session.add_all(kw_offers)
+                            session.commit()
 
-                    violations = process_offers(session, kw_offers)
-                    total_offers += len(kw_offers)
-                    total_violations += len(violations)
+                            violations = process_offers(session, kw_offers)
+                            total_offers += len(kw_offers)
+                            total_violations += len(violations)
 
-                    # 通知
-                    for v in violations:
-                        if not v.is_whitelisted:
-                            if v.severity == "P0":
-                                total_p0 += 1
-                            elif v.severity == "P1":
-                                total_p1 += 1
-                            try:
-                                notify_violation(v)
-                                v.notified = True
-                            except Exception as e:
-                                log.error(f"  Notify failed: {e}")
-                    session.commit()
+                            # 通知
+                            for v in violations:
+                                if not v.is_whitelisted:
+                                    if v.severity == "P0":
+                                        total_p0 += 1
+                                    elif v.severity == "P1":
+                                        total_p1 += 1
+                                    try:
+                                        notify_violation(v)
+                                        v.notified = True
+                                    except Exception as e:
+                                        log.error(f"  Notify failed: {e}")
+                            session.commit()
+                        except Exception as e:
+                            session.rollback()
+                            log.error(f"  [DB Save] Failed for keyword {kw}: {e}")
+                            total_fails += len(kw_offers)
 
             duration = time.time() - start_time
 
             # 完成
-            crud.update_job_status(
-                session, job_id, "SUCCESS",
-                finished_at=datetime.utcnow(),
-                total_items=total_offers,
-                success_items=total_offers,
-                violations_found=total_violations,
-                progress=100,
-            )
-            session.commit()
+            with factory() as session:
+                crud.update_job_status(
+                    session, job_id, "SUCCESS",
+                    finished_at=datetime.utcnow(),
+                    total_items=total_offers,
+                    success_items=total_offers,
+                    violations_found=total_violations,
+                    progress=100,
+                )
+                session.commit()
 
             # 推送汇总
             try:
                 notify_scan_summary(
-                    keyword=", ".join(k.keyword for k in keywords_objs[:3]),
+                    keyword=", ".join(keywords_list[:3]),
                     total_offers=total_offers,
                     new_violations=total_violations,
                     p0_count=total_p0,
@@ -307,122 +323,143 @@ class CollectionManager:
             )
 
         except asyncio.CancelledError:
-            crud.update_job_status(
-                session, job_id, "CANCELLED",
-                finished_at=datetime.utcnow(),
-            )
-            session.commit()
+            with factory() as session:
+                crud.update_job_status(
+                    session, job_id, "CANCELLED",
+                    finished_at=datetime.utcnow(),
+                )
+                session.commit()
             log.info(f"[Job:{job_id}] Cancelled")
 
         except Exception as e:
             log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
-            try:
-                session.rollback()
-                crud.update_job_status(
-                    session, job_id, "FAILED",
-                    error_message=str(e)[:2000],
-                    finished_at=datetime.utcnow(),
-                )
-                session.commit()
-            except Exception:
-                pass
+            with factory() as session:
+                try:
+                    crud.update_job_status(
+                        session, job_id, "FAILED",
+                        error_message=str(e)[:2000],
+                        finished_at=datetime.utcnow(),
+                    )
+                    session.commit()
+                except Exception:
+                    pass
 
         finally:
             _active_jobs.pop(job_id, None)
-            session.close()
 
     async def _run_platform_scan(self, job_id: int, platform: str, keyword: str = None):
         """执行单平台扫描"""
         factory = get_session_factory()
-        session = factory()
         _active_jobs[job_id] = False
         start_time = time.time()
 
+        with factory() as session:
+            try:
+                crud.update_job_status(
+                    session, job_id, "RUNNING",
+                    started_at=datetime.utcnow(),
+                )
+                session.commit()
+
+                keywords_objs = crud.get_active_keywords(session)
+                if keyword:
+                    keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
+            
+                keywords_list = [k.keyword for k in keywords_objs]
+            except Exception as e:
+                log.error(f"[Job:{job_id}] Init failed: {e}")
+                return
+
+        total_offers = 0
+        total_violations = 0
+        total_fails = 0
+        total_steps = max(len(keywords_list), 1)
+
         try:
-            crud.update_job_status(
-                session, job_id, "RUNNING",
-                started_at=datetime.utcnow(),
-            )
-            session.commit()
+            for i, kw in enumerate(keywords_list):
+                with factory() as session:
+                    job_record = crud.get_job(session, job_id)
+                    if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
+                        raise asyncio.CancelledError()
 
-            keywords_objs = crud.get_active_keywords(session)
-            if keyword:
-                keywords_objs = [k for k in keywords_objs if k.keyword == keyword]
-
-            total_offers = 0
-            total_violations = 0
-            total_fails = 0
-            total_steps = max(len(keywords_objs), 1)
-
-            for i, kw_obj in enumerate(keywords_objs):
-                job_record = crud.get_job(session, job_id)
-                if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
-                    raise asyncio.CancelledError()
-
-                kw = kw_obj.keyword
                 try:
-                    offers = await self._scrape_one(platform, kw, session)
+                    offers = await self._scrape_one(platform, kw)
                     if offers:
-                        session.add_all(offers)
-                        session.commit()
-                        violations = process_offers(session, offers)
-                        total_offers += len(offers)
-                        total_violations += len(violations)
+                        with factory() as session:
+                            try:
+                                session.add_all(offers)
+                                session.commit()
+                                violations = process_offers(session, offers)
+                                total_offers += len(offers)
+                                total_violations += len(violations)
+                            except Exception as e:
+                                session.rollback()
+                                log.error(f"[DB Save] Failed for keyword {kw}: {e}")
+                                total_fails += len(offers)
                 except Exception as e:
                     total_fails += 1
                     log.error(f"[{platform}] keyword={kw} failed: {e}")
 
-                crud.update_job_progress(
-                    session, job_id,
-                    progress=int((i + 1) / total_steps * 100),
+                with factory() as session:
+                    try:
+                        crud.update_job_progress(
+                            session, job_id,
+                            progress=int((i + 1) / total_steps * 100),
+                            success_items=total_offers,
+                            fail_items=total_fails,
+                            total_items=total_steps,
+                            violations_found=total_violations,
+                        )
+                        session.commit()
+                    except Exception as e:
+                        log.error(f"Failed to update progress: {e}")
+
+            with factory() as session:
+                crud.update_job_status(
+                    session, job_id, "SUCCESS",
+                    finished_at=datetime.utcnow(),
+                    total_items=total_offers,
                     success_items=total_offers,
-                    fail_items=total_fails,
-                    total_items=total_steps,
                     violations_found=total_violations,
+                    progress=100,
                 )
                 session.commit()
 
-            crud.update_job_status(
-                session, job_id, "SUCCESS",
-                finished_at=datetime.utcnow(),
-                total_items=total_offers,
-                success_items=total_offers,
-                violations_found=total_violations,
-                progress=100,
-            )
-            session.commit()
-
         except asyncio.CancelledError:
-            crud.update_job_status(session, job_id, "CANCELLED",
-                                   finished_at=datetime.utcnow())
-            session.commit()
-        except Exception as e:
-            log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
-            try:
-                session.rollback()
-                crud.update_job_status(session, job_id, "FAILED",
-                                       error_message=str(e)[:2000],
+            with factory() as session:
+                crud.update_job_status(session, job_id, "CANCELLED",
                                        finished_at=datetime.utcnow())
                 session.commit()
-            except Exception:
-                pass
+        except Exception as e:
+            log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
+            with factory() as session:
+                try:
+                    crud.update_job_status(session, job_id, "FAILED",
+                                           error_message=str(e)[:2000],
+                                           finished_at=datetime.utcnow())
+                    session.commit()
+                except Exception:
+                    pass
         finally:
             _active_jobs.pop(job_id, None)
-            session.close()
 
     async def _run_single_scrape(self, job_id: int, platform: str, url: str):
         """执行单 URL 采集"""
         factory = get_session_factory()
-        session = factory()
         _active_jobs[job_id] = False
 
-        try:
-            crud.update_job_status(
-                session, job_id, "RUNNING",
-                started_at=datetime.utcnow(),
-            )
-            session.commit()
+        with factory() as session:
+            try:
+                crud.update_job_status(
+                    session, job_id, "RUNNING",
+                    started_at=datetime.utcnow(),
+                )
+                session.commit()
+            except Exception as e:
+                log.error(f"[Job:{job_id}] Init failed: {e}")
+                return
 
+        try:
             # 使用注册表创建 scraper
             plat_enum = Platform(platform)
             scraper = create_scraper(
@@ -441,39 +478,42 @@ class CollectionManager:
 
             if result:
                 offer = self._product_to_offer(result, platform, "", url)
-                session.add(offer)
+                with factory() as session:
+                    session.add(offer)
+                    session.commit()
+                    total_items = 1
+
+                    violations = process_offers(session, [offer])
+                    violations_count = len(violations)
+                    # For safety if there's any updates
+                    session.commit()
+
+            with factory() as session:
+                crud.update_job_status(
+                    session, job_id, "SUCCESS",
+                    finished_at=datetime.utcnow(),
+                    total_items=total_items,
+                    success_items=total_items,
+                    violations_found=violations_count,
+                    progress=100,
+                )
                 session.commit()
-                total_items = 1
-
-                violations = process_offers(session, [offer])
-                violations_count = len(violations)
-
-            crud.update_job_status(
-                session, job_id, "SUCCESS",
-                finished_at=datetime.utcnow(),
-                total_items=total_items,
-                success_items=total_items,
-                violations_found=violations_count,
-                progress=100,
-            )
-            session.commit()
 
         except Exception as e:
             log.error(f"[Job:{job_id}] Single scrape failed: {e}", exc_info=True)
-            try:
-                session.rollback()
-                crud.update_job_status(session, job_id, "FAILED",
-                                       error_message=str(e)[:2000],
-                                       finished_at=datetime.utcnow())
-                session.commit()
-            except Exception:
-                pass
+            with factory() as session:
+                try:
+                    crud.update_job_status(session, job_id, "FAILED",
+                                           error_message=str(e)[:2000],
+                                           finished_at=datetime.utcnow())
+                    session.commit()
+                except Exception:
+                    pass
         finally:
             _active_jobs.pop(job_id, None)
-            session.close()
 
     async def _scrape_one(
-        self, platform: str, keyword: str, session,
+        self, platform: str, keyword: str,
     ) -> list[OfferSnapshot]:
         """用注册表 scraper 采集单平台单关键词, 返回 OfferSnapshot 列表"""
         try:
@@ -532,11 +572,10 @@ class CollectionManager:
     ) -> OfferSnapshot:
         """将 scraper 返回的 ProductPrice 转换为 OfferSnapshot"""
         now = datetime.utcnow()
-        bucket = now.strftime("%Y%m%d%H")
         # Include product_id or url to prevent false dedup when two products share the same name/shop/hour
         product_id_part = getattr(product, "product_id", None) or url or ""
-        raw = f"{platform}|{product.product_name or ''}|{product.shop_name or ''}|{product_id_part[:80]}|{bucket}"
-        offer_hash = hashlib.sha256(raw.encode()).hexdigest()[:32]
+        identifier = f"{product.product_name or ''}|{product.shop_name or ''}|{product_id_part[:80]}"
+        offer_hash = crud.make_offer_hash(platform, identifier)
 
         raw_price = Decimal("0")
         try:
@@ -569,10 +608,10 @@ class CollectionManager:
         return OfferSnapshot(
             offer_hash=offer_hash,
             platform=platform,
-            keyword=keyword,
-            canonical_url=product.product_url or url,
+            keyword=(keyword or "")[:100],
+            canonical_url=(product.product_url or url)[:500],
             product_name=(product.product_name or "")[:300],
-            product_id=product.product_id,
+            product_id=(product.product_id or "")[:100],
             shop_name=(product.shop_name or "")[:100],
             ship_from_city=(product.ship_from_city or "")[:50],
             raw_price=raw_price,
@@ -583,7 +622,7 @@ class CollectionManager:
             confidence="HIGH",
             parse_status="OK",
             captured_at=now,
-            screenshot_path=screenshot_path,
+            screenshot_path=(screenshot_path or "")[:500],
             screenshot_hash=screenshot_hash,
         )
 
