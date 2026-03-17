@@ -95,7 +95,11 @@ def harvest_cookie(platform: str):
     """在后台(或新终端)启动 Cookie 采集器"""
     import subprocess
     import os
+    import re
     
+    if not re.match(r"^[a-zA-Z0-9_]+$", platform):
+        raise HTTPException(400, "Invalid platform format")
+        
     # 获取项目根目录 (假设 API 跑在 price_monitor/api 下, 返回两层)
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     

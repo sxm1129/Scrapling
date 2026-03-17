@@ -12,7 +12,7 @@ from price_monitor.db import crud
 from price_monitor.db.models import PeriodicReport
 from price_monitor.engine import reporting_engine
 
-router = APIRouter(prefix="/v1/reports")
+router = APIRouter(prefix="/api/v1/reports")
 
 
 def get_db():
@@ -27,10 +27,10 @@ def get_db():
         db.close()
 
 
-def _parse_dates(start_str: Optional[str], end_str: Optional[str], default_days: int = 7):
+def _parse_dates(start_dt: Optional[datetime], end_dt: Optional[datetime], default_days: int = 7):
     now = datetime.utcnow()  # Naive UTC for MySQL DATETIME comparisons
-    end = datetime.fromisoformat(end_str) if end_str else now
-    start = datetime.fromisoformat(start_str) if start_str else now - timedelta(days=default_days)
+    end = end_dt.replace(tzinfo=None) if end_dt else now
+    start = start_dt.replace(tzinfo=None) if start_dt else now - timedelta(days=default_days)
     return start, end
 
 
@@ -38,8 +38,8 @@ def _parse_dates(start_str: Optional[str], end_str: Optional[str], default_days:
 
 @router.get("/kpi")
 def get_kpis(
-    start: Optional[str] = Query(None, description="ISO datetime"),
-    end: Optional[str] = Query(None),
+    start: Optional[datetime] = Query(None, description="ISO datetime"),
+    end: Optional[datetime] = Query(None),
     db: Session = Depends(get_db),
 ):
     s, e = _parse_dates(start, end)
@@ -51,8 +51,8 @@ def get_kpis(
 @router.get("/trends")
 def get_trends(
     metric: str = Query("violations", enum=["violations", "workorders"]),
-    start: Optional[str] = None,
-    end: Optional[str] = None,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
     days: int = Query(30, ge=1, le=365),
     db: Session = Depends(get_db),
 ):
@@ -64,8 +64,8 @@ def get_trends(
 
 @router.get("/top-violators")
 def get_top_violators(
-    start: Optional[str] = None,
-    end: Optional[str] = None,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
@@ -76,8 +76,8 @@ def get_top_violators(
 # ─── POST Generate Report ───
 
 class GenerateReportBody(BaseModel):
-    start: str
-    end: str
+    start: datetime
+    end: datetime
     report_type: str = "CUSTOM"
     feishu_webhook_url: Optional[str] = None
     push_to_feishu: bool = False
@@ -85,8 +85,8 @@ class GenerateReportBody(BaseModel):
 
 @router.post("/generate")
 def generate_report(body: GenerateReportBody, db: Session = Depends(get_db)):
-    start = datetime.fromisoformat(body.start)
-    end = datetime.fromisoformat(body.end)
+    start = body.start.replace(tzinfo=None)
+    end = body.end.replace(tzinfo=None)
 
     # Create report record
     report_data = {

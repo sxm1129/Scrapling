@@ -14,7 +14,7 @@ from price_monitor.engine.workorder_engine import (
 )
 from price_monitor.notify import feishu as feishu_notify
 
-router = APIRouter(prefix="/v1")
+router = APIRouter(prefix="/api/v1")
 
 def get_db():
     factory = get_session_factory()
@@ -125,7 +125,7 @@ def get_workorder(wo_id: int, db: Session = Depends(get_db)):
 @router.patch("/workorders/{wo_id}")
 def update_workorder(wo_id: int, body: WorkOrderUpdateBody, db: Session = Depends(get_db)):
     # Filter out None values but keep explicit status/owner updates
-    updates = {k: v for k, v in body.dict().items() if v is not None and k != "note"}
+    updates = {k: v for k, v in body.model_dump().items() if v is not None and k != "note"}
     wo = crud.update_workorder(db, wo_id, updates)
     if not wo:
         raise HTTPException(status_code=404, detail="WorkOrder not found")
@@ -173,7 +173,7 @@ def list_rules(platform: Optional[str] = None, db: Session = Depends(get_db)):
 
 @router.post("/responsibility-rules")
 def create_rule(body: ResponsibilityRuleCreate, db: Session = Depends(get_db)):
-    rule = crud.create_responsibility_rule(db, body.dict())
+    rule = crud.create_responsibility_rule(db, body.model_dump())
     db.commit()
     return {"id": rule.id, "status": "created"}
 
