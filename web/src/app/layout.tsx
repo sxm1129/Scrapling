@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import "./globals.css";
 
+const APP_VERSION = "V1.0.1";
+
 const NAV_ITEMS = [
   { href: "/", label: "看板", icon: "📊" },
   { href: "/collection", label: "采集管理", icon: "🔄" },
@@ -69,28 +71,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ))}
             </nav>
 
-            {/* Auth Token */}
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "auto" }}>
-              <label style={{ fontSize: "0.625rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>
-                管理密码
-              </label>
-              <div style={{ display: "flex", gap: 4 }}>
-                <input
-                  type="password"
-                  className="input"
-                  style={{ flex: 1, fontSize: "0.75rem", padding: "4px 8px" }}
-                  placeholder="输入密码"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSaveToken()}
-                />
-                <button
-                  className="btn btn-ghost"
-                  style={{ fontSize: "0.625rem", padding: "4px 8px", color: saved ? "#4caf50" : undefined }}
-                  onClick={handleSaveToken}
-                >
-                  {saved ? "✓" : "保存"}
-                </button>
+            {/* Auth Token & Version */}
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "auto", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div>
+                <label style={{ fontSize: "0.625rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>
+                  管理密码
+                </label>
+                <div style={{ display: "flex", gap: 4 }}>
+                  <input
+                    type="password"
+                    className="input"
+                    style={{ flex: 1, fontSize: "0.75rem", padding: "4px 8px" }}
+                    placeholder="输入密码"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSaveToken()}
+                  />
+                  <button
+                    className="btn btn-ghost"
+                    style={{ fontSize: "0.625rem", padding: "4px 8px", color: saved ? "#4caf50" : undefined }}
+                    onClick={handleSaveToken}
+                  >
+                    {saved ? "✓" : "保存"}
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textAlign: "center", fontWeight: 500 }}>
+                {APP_VERSION}
               </div>
             </div>
           </aside>
