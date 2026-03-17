@@ -195,7 +195,7 @@ class WorkOrder(Base):
     screenshot_path: Mapped[Optional[str]] = mapped_column(String(500))
     escalation_level: Mapped[int] = mapped_column(Integer, default=0, comment="0=未升级，1=一级升级，...")
     reoccur_count: Mapped[int] = mapped_column(Integer, default=0, comment="复发次数")
-    action_log: Mapped[Optional[list]] = mapped_column(JSON, default=list, comment="操作日志列表")
+    action_log: Mapped[Optional[list]] = mapped_column(JSON, default=None, comment="操作日志列表")
     sla_due_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="SLA截止时间")
     notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="首次飞书通知时间")
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from price_monitor.db.session import get_session_factory
 from price_monitor.db import crud
+from price_monitor.db.models import PeriodicReport
 from price_monitor.engine import reporting_engine
 
 router = APIRouter(prefix="/v1/reports")
@@ -19,6 +20,9 @@ def get_db():
     db = factory()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -152,8 +156,7 @@ def list_reports(
 
 @router.get("/{report_id}")
 def get_report(report_id: int, db: Session = Depends(get_db)):
-    reports, _ = crud.list_periodic_reports(db, page=1, page_size=1)
-    report = db.query(crud.PeriodicReport).filter(crud.PeriodicReport.id == report_id).first()
+    report = db.query(PeriodicReport).filter(PeriodicReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     return {

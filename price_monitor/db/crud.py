@@ -199,8 +199,8 @@ def toggle_keyword(session: Session, keyword_id: int, enabled: bool) -> bool:
 
 
 def get_active_whitelist(session: Session) -> list[WhitelistRule]:
-    """获取有效白名单"""
-    now = datetime.now(timezone.utc)
+    """获取有效白名单（使用 naive UTC 与 MySQL DATETIME 比较）"""
+    now = datetime.utcnow()  # MySQL DATETIME is naive UTC
     return session.query(WhitelistRule).filter(
         WhitelistRule.status == "ACTIVE",
         (WhitelistRule.expires_at.is_(None)) | (WhitelistRule.expires_at > now),
@@ -248,8 +248,8 @@ def save_cookies(session: Session, platform: str, account_id: str, cookies: list
 
 
 def get_dashboard_stats(session: Session) -> dict:
-    """看板统计"""
-    now = datetime.now(timezone.utc)
+    """看板统计（使用 naive UTC 与 MySQL DATETIME 比较）"""
+    now = datetime.utcnow()  # MySQL DATETIME is naive UTC
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     total_offers = session.query(func.count(OfferSnapshot.id)).scalar()
@@ -357,7 +357,7 @@ def fail_stale_jobs(session: Session) -> int:
     ).all()
     
     count = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()  # MySQL DATETIME is naive UTC
     for j in stale_jobs:
         j.status = "FAILED"
         j.error_message = "Server restarted abruptly"
@@ -454,11 +454,11 @@ def append_workorder_action(session: Session, wo_id: int, action: dict) -> Optio
 
 
 def list_open_workorders_overdue(session: Session) -> list[WorkOrder]:
-    """查询所有已超 SLA 的开放工单"""
-    now = datetime.now(timezone.utc)
+    """查询所有已超 SLA 的开放工单（使用 naive UTC 与 MySQL DATETIME 比较）"""
+    now_utc = datetime.utcnow()  # MySQL DATETIME stores naive UTC
     return session.query(WorkOrder).filter(
         WorkOrder.status.in_(["OPEN", "IN_PROGRESS"]),
-        WorkOrder.sla_due_at <= now,
+        WorkOrder.sla_due_at <= now_utc,
     ).all()
 
 

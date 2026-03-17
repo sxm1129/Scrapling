@@ -71,14 +71,16 @@ async def run_sla_check():
     log.info("Starting SLA escalation check...")
     factory = get_session_factory()
     session = factory()
+    escalated_ids: set = set()
+    count = 0
     try:
-        count = check_sla_escalations(session)
+        count, escalated_ids = check_sla_escalations(session)
         if count:
-            log.warning(f"Escalated {count} overdue workorders")
-            # Send Feishu alerts for escalated WOs
-            escalated = crud.list_workorders(session, status="OPEN")[0] + crud.list_workorders(session, status="IN_PROGRESS")[0]
-            for wo in escalated:
-                if wo.escalation_level > 0:
+            log.warning(f"Escalated {count} overdue workorders: {escalated_ids}")
+            # Send Feishu alerts ONLY for WOs escalated THIS round
+            for wo_id in escalated_ids:
+                wo = crud.get_workorder(session, wo_id)
+                if wo:
                     wo_dict = {
                         "id": wo.id, "severity": wo.severity,
                         "owner_name": wo.owner_name, "product_name": wo.product_name,
@@ -89,7 +91,7 @@ async def run_sla_check():
         log.error(f"SLA check failed: {e}", exc_info=True)
     finally:
         session.close()
-    log.info(f"SLA check done, escalated: {count if 'count' in dir() else 0}")
+    log.info(f"SLA check done, escalated: {count}")
 
 
 async def run_periodic_report(report_type: str = "WEEKLY"):

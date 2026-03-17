@@ -21,6 +21,9 @@ def get_db():
     db = factory()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -59,6 +62,8 @@ class ResponsibilityRuleCreate(BaseModel):
 # ─── WorkOrder Endpoints ───
 
 def _wo_to_dict(wo) -> dict:
+    # Use naive UTC for SLA comparison: MySQL DATETIME columns store naive UTC
+    now_utc = datetime.utcnow()
     return {
         "id": wo.id,
         "violation_id": wo.violation_id,
@@ -78,7 +83,11 @@ def _wo_to_dict(wo) -> dict:
         "reoccur_count": wo.reoccur_count,
         "action_log": wo.action_log or [],
         "sla_due_at": wo.sla_due_at.isoformat() if wo.sla_due_at else None,
-        "sla_overdue": (wo.sla_due_at is not None and wo.sla_due_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc) and wo.status in ("OPEN", "IN_PROGRESS")),
+        "sla_overdue": (
+            wo.sla_due_at is not None
+            and wo.sla_due_at < now_utc  # both naive UTC
+            and wo.status in ("OPEN", "IN_PROGRESS")
+        ),
         "resolved_at": wo.resolved_at.isoformat() if wo.resolved_at else None,
         "resolution_note": wo.resolution_note,
         "resolution_type": wo.resolution_type,
@@ -115,12 +124,13 @@ def get_workorder(wo_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/workorders/{wo_id}")
 def update_workorder(wo_id: int, body: WorkOrderUpdateBody, db: Session = Depends(get_db)):
-    updates = {k: v for k, v in body.dict().items() if v is not None}
+    # Filter out None values but keep explicit status/owner updates
+    updates = {k: v for k, v in body.dict().items() if v is not None and k != "note"}
     wo = crud.update_workorder(db, wo_id, updates)
     if not wo:
         raise HTTPException(status_code=404, detail="WorkOrder not found")
     if body.note:
-        append_action(db, wo_id, "STATUS_UPDATE", body.note or "", "user")
+        append_action(db, wo_id, "STATUS_UPDATE", body.note, "user")
     db.commit()
     return _wo_to_dict(wo)
 
@@ -148,7 +158,17 @@ def resolve_wo(wo_id: int, body: WorkOrderResolveBody, db: Session = Depends(get
 @router.get("/responsibility-rules")
 def list_rules(platform: Optional[str] = None, db: Session = Depends(get_db)):
     rules = crud.list_responsibility_rules(db, platform=platform)
-    return [r.__dict__ for r in rules]
+    return [
+        {
+            "id": r.id, "platform": r.platform, "shop_name_pattern": r.shop_name_pattern,
+            "ship_from_city": r.ship_from_city, "dealer_name": r.dealer_name,
+            "owner_user_id": r.owner_user_id, "owner_name": r.owner_name,
+            "owner_feishu_id": r.owner_feishu_id, "priority": r.priority,
+            "is_active": r.is_active, "note": r.note,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rules
+    ]
 
 
 @router.post("/responsibility-rules")

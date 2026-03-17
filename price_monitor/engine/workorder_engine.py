@@ -92,7 +92,7 @@ def create_workorder_from_violation(
     rule = match_responsibility(session, platform, shop_name, ship_city)
 
     sla_hours = SLA_HOURS.get(violation.severity, 48)
-    sla_due = datetime.now(timezone.utc) + timedelta(hours=sla_hours)
+    sla_due = datetime.utcnow() + timedelta(hours=sla_hours)  # Naive UTC for MySQL DATETIME
 
     wo_data = {
         "violation_id": violation.id,
@@ -162,28 +162,38 @@ def resolve_workorder(
     return wo
 
 
-def check_sla_escalations(session: Session) -> int:
+def check_sla_escalations(session: Session) -> tuple[int, set]:
     """
     轮询所有超期工单，执行升级动作：
     - escalation_level += 1
+    - sla_due_at 顺延一个升级间隔（防止同一工单每轮触发）
     - 推送飞书通知（在 caller 中处理，事件驱动）
-    返回升级数量
+    返回 (升级数量, 升级的工单ID集合)
     """
+    # Escalation SLA extension: each level adds the same hours as the re-check interval + buffer
+    ESCALATION_EXTENSION_HOURS = 24  # After escalation, give 24h before next escalation
+
     overdue = crud.list_open_workorders_overdue(session)
     count = 0
+    escalated_ids: set = set()
     for wo in overdue:
         old_level = wo.escalation_level
-        updates = {"escalation_level": old_level + 1}
+        new_sla_due = datetime.utcnow() + timedelta(hours=ESCALATION_EXTENSION_HOURS)  # Naive UTC for MySQL
+        updates = {
+            "escalation_level": old_level + 1,
+            "sla_due_at": new_sla_due,  # BUG-5 fix: prevent re-escalation next round
+        }
         crud.update_workorder(session, wo.id, updates)
         append_action(
             session, wo.id,
             action_type="ESCALATED",
-            note=f"SLA 超时，升级至 Level {old_level + 1}",
+            note=f"SLA 超时，升级至 Level {old_level + 1}，下次 SLA 截止至 {new_sla_due.strftime('%Y-%m-%d %H:%M UTC')}",
             operator="system",
         )
+        escalated_ids.add(wo.id)
         count += 1
-        log.warning(f"WorkOrder #{wo.id} escalated to Level {old_level + 1} (overdue SLA)")
+        log.warning(f"WorkOrder #{wo.id} escalated to Level {old_level + 1} (overdue SLA), next SLA: {new_sla_due}")
 
     if count:
         session.commit()
-    return count
+    return count, escalated_ids

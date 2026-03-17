@@ -195,7 +195,7 @@ class CollectionManager:
             # 标记开始
             crud.update_job_status(
                 session, job_id, "RUNNING",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.utcnow(),
             )
             session.commit()
 
@@ -206,7 +206,7 @@ class CollectionManager:
             if not keywords_objs:
                 crud.update_job_status(
                     session, job_id, "SUCCESS",
-                    finished_at=datetime.now(timezone.utc),
+                    finished_at=datetime.utcnow(),
                     error_message="No active keywords found",
                 )
                 session.commit()
@@ -280,7 +280,7 @@ class CollectionManager:
             # 完成
             crud.update_job_status(
                 session, job_id, "SUCCESS",
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.utcnow(),
                 total_items=total_offers,
                 success_items=total_offers,
                 violations_found=total_violations,
@@ -309,7 +309,7 @@ class CollectionManager:
         except asyncio.CancelledError:
             crud.update_job_status(
                 session, job_id, "CANCELLED",
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.utcnow(),
             )
             session.commit()
             log.info(f"[Job:{job_id}] Cancelled")
@@ -321,7 +321,7 @@ class CollectionManager:
                 crud.update_job_status(
                     session, job_id, "FAILED",
                     error_message=str(e)[:2000],
-                    finished_at=datetime.now(timezone.utc),
+                    finished_at=datetime.utcnow(),
                 )
                 session.commit()
             except Exception:
@@ -341,7 +341,7 @@ class CollectionManager:
         try:
             crud.update_job_status(
                 session, job_id, "RUNNING",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.utcnow(),
             )
             session.commit()
 
@@ -384,7 +384,7 @@ class CollectionManager:
 
             crud.update_job_status(
                 session, job_id, "SUCCESS",
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.utcnow(),
                 total_items=total_offers,
                 success_items=total_offers,
                 violations_found=total_violations,
@@ -394,7 +394,7 @@ class CollectionManager:
 
         except asyncio.CancelledError:
             crud.update_job_status(session, job_id, "CANCELLED",
-                                   finished_at=datetime.now(timezone.utc))
+                                   finished_at=datetime.utcnow())
             session.commit()
         except Exception as e:
             log.error(f"[Job:{job_id}] Failed: {e}", exc_info=True)
@@ -402,7 +402,7 @@ class CollectionManager:
                 session.rollback()
                 crud.update_job_status(session, job_id, "FAILED",
                                        error_message=str(e)[:2000],
-                                       finished_at=datetime.now(timezone.utc))
+                                       finished_at=datetime.utcnow())
                 session.commit()
             except Exception:
                 pass
@@ -419,7 +419,7 @@ class CollectionManager:
         try:
             crud.update_job_status(
                 session, job_id, "RUNNING",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.utcnow(),
             )
             session.commit()
 
@@ -450,7 +450,7 @@ class CollectionManager:
 
             crud.update_job_status(
                 session, job_id, "SUCCESS",
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.utcnow(),
                 total_items=total_items,
                 success_items=total_items,
                 violations_found=violations_count,
@@ -464,7 +464,7 @@ class CollectionManager:
                 session.rollback()
                 crud.update_job_status(session, job_id, "FAILED",
                                        error_message=str(e)[:2000],
-                                       finished_at=datetime.now(timezone.utc))
+                                       finished_at=datetime.utcnow())
                 session.commit()
             except Exception:
                 pass
@@ -531,9 +531,11 @@ class CollectionManager:
         product: ProductPrice, platform: str, keyword: str, url: str,
     ) -> OfferSnapshot:
         """将 scraper 返回的 ProductPrice 转换为 OfferSnapshot"""
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         bucket = now.strftime("%Y%m%d%H")
-        raw = f"{platform}|{product.product_name or ''}|{product.shop_name or ''}|{bucket}"
+        # Include product_id or url to prevent false dedup when two products share the same name/shop/hour
+        product_id_part = getattr(product, "product_id", None) or url or ""
+        raw = f"{platform}|{product.product_name or ''}|{product.shop_name or ''}|{product_id_part[:80]}|{bucket}"
         offer_hash = hashlib.sha256(raw.encode()).hexdigest()[:32]
 
         raw_price = Decimal("0")

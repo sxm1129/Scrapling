@@ -153,10 +153,11 @@ def send_report_ready(
     if hasattr(end, "strftime"):
         end = end.strftime("%Y-%m-%d")
 
-    violations_total = kpis.get("violations_total", 0)
-    workorder_close_rate = kpis.get("workorder_close_rate", 0)
-    sla_achievement = kpis.get("sla_achievement_rate", 0)
-    top_platform = kpis.get("top_platform", "N/A")
+    violations_total = kpis.get("kpi1_violations_total", 0)
+    workorder_close_rate = kpis.get("kpi3_workorder_close_rate", 0) or 0
+    sla_achievement = kpis.get("kpi4_sla_achievement_rate") or 0
+    top_platform = kpis.get("kpi5_top_platform") or "N/A"
+    avg_gap = kpis.get("kpi6_avg_gap_percent", 0) or 0
 
     payload = {
         "msg_type": "interactive",
@@ -173,6 +174,7 @@ def send_report_ready(
                         {"is_short": True, "text": {"tag": "lark_md", "content": f"**工单闭环率**\n{workorder_close_rate:.1%}"}},
                         {"is_short": True, "text": {"tag": "lark_md", "content": f"**SLA 达成率**\n{sla_achievement:.1%}"}},
                         {"is_short": True, "text": {"tag": "lark_md", "content": f"**违规最多平台**\n{top_platform}"}},
+                        {"is_short": True, "text": {"tag": "lark_md", "content": f"**平均价差**\n{avg_gap:.1f}%"}},
                     ],
                 },
                 {"tag": "hr"},
