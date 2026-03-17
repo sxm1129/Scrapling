@@ -89,6 +89,7 @@ class CookieManager:
 
     def get_all_status(self) -> list[dict]:
         """所有平台 Cookie 健康总览"""
+        self.pool._load()
         pool_stats = self.pool.get_stats()
 
         # 从 accounts.json 获取详细信息
@@ -138,6 +139,8 @@ class CookieManager:
             "detail": "",
             "checked_at": datetime.now(timezone.utc).isoformat(),
         }
+
+        self.pool._load()
 
         # 获取 Cookie (只读, 不更新 last_used)
         accounts = self.pool._pool.get(platform, [])
@@ -226,6 +229,7 @@ class CookieManager:
 
     def sync_pool_to_db(self) -> dict:
         """accounts.json → CookieAccount DB 同步"""
+        self.pool._load()
         factory = get_session_factory()
         session = factory()
         synced = 0
@@ -266,6 +270,7 @@ class CookieManager:
 
     def delete_account(self, platform: str, account_id: str) -> bool:
         """从 JSON + DB 同时删除"""
+        self.pool._load()
         deleted = False
 
         # 从 accounts.json 删除

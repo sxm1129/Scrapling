@@ -84,7 +84,7 @@ class PriceScreenshot:
             # 注入水印
             await self.add_timestamp_watermark(page, context_str=context_str)
 
-            await page.screenshot(path=str(filepath), full_page=False)
+            await page.screenshot(path=str(filepath), full_page=True)
             log.info(f"Full page screenshot saved: {filepath}")
             return str(filepath)
 

@@ -276,6 +276,10 @@ async def harvest_cookies(
 
             except Exception as e:
                 log.debug(f"Check error: {e}")
+                err_str = str(e).lower()
+                if "target closed" in err_str or "browser has been closed" in err_str:
+                    log.warning("\n❌ Browser was closed manually. Aborting harvest process.")
+                    break
 
         if not success:
             log.warning(f"\n⏳ 登录超时 ({timeout}s)")
