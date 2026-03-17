@@ -61,20 +61,35 @@ class AccountPool:
         else:
             self._pool = {}
 
-    def _save(self) -> None:
-        """保存账号池到文件 (带文件锁, 防止并发写入损坏)"""
-        import fcntl
+    def _sync_and_save(self, update_func):
+        """获取锁 -> 重新加载最新状态 -> 执行修改函数 -> 原子化保存回磁盘"""
+        import fcntl, os, tempfile
         self.pool_file.parent.mkdir(parents=True, exist_ok=True)
-        data = json.dumps(self._pool, ensure_ascii=False, indent=2)
-        try:
+        if not self.pool_file.exists():
             with open(self.pool_file, "w", encoding="utf-8") as f:
+                f.write("{}")
+        try:
+            with open(self.pool_file, "r+", encoding="utf-8") as f:
                 fcntl.flock(f.fileno(), fcntl.LOCK_EX)
                 try:
-                    f.write(data)
+                    f.seek(0)
+                    content = f.read()
+                    self._pool = json.loads(content) if content else {}
+                    
+                    ret = update_func()
+                    
+                    fd, tmp_path = tempfile.mkstemp(dir=self.pool_file.parent, prefix="acc_", suffix=".tmp")
+                    with os.fdopen(fd, "w", encoding="utf-8") as tmp_f:
+                        json.dump(self._pool, tmp_f, ensure_ascii=False, indent=2)
+                        tmp_f.flush()
+                        os.fsync(tmp_f.fileno())
+                    os.replace(tmp_path, self.pool_file)
+                    return ret
                 finally:
                     fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-        except OSError as e:
-            log.error(f"Failed to save account pool: {e}")
+        except Exception as e:
+            log.error(f"Failed to sync and save account pool: {e}")
+            return None
 
     def _auto_recover_cooldown(self, platform: str) -> None:
         """自动恢复超时 cooldown 账号"""
@@ -102,33 +117,31 @@ class AccountPool:
 
         :param cookies: Playwright 格式 list[dict] 或简单 dict
         """
-        if platform not in self._pool:
-            self._pool[platform] = []
+        def _op():
+            if platform not in self._pool:
+                self._pool[platform] = []
+            
+            # 检查是否已存在
+            for acc in self._pool[platform]:
+                if acc["id"] == account_id:
+                    acc["cookies"] = normalized
+                    acc["user_agent"] = user_agent
+                    acc["status"] = "active"
+                    acc["fail_count"] = 0
+                    acc["harvested_at"] = datetime.now().isoformat()
+                    return
 
-        # 标准化 Cookie 格式
-        normalized = self._normalize_cookies(cookies)
+            self._pool[platform].append({
+                "id": account_id,
+                "cookies": normalized,
+                "user_agent": user_agent,
+                "status": "active",
+                "last_used": "",
+                "fail_count": 0,
+                "harvested_at": datetime.now().isoformat(),
+            })
 
-        # 检查是否已存在
-        for acc in self._pool[platform]:
-            if acc["id"] == account_id:
-                acc["cookies"] = normalized
-                acc["user_agent"] = user_agent
-                acc["status"] = "active"
-                acc["fail_count"] = 0
-                acc["harvested_at"] = datetime.now().isoformat()
-                self._save()
-                return
-
-        self._pool[platform].append({
-            "id": account_id,
-            "cookies": normalized,
-            "user_agent": user_agent,
-            "status": "active",
-            "last_used": "",
-            "fail_count": 0,
-            "harvested_at": datetime.now().isoformat(),
-        })
-        self._save()
+        self._sync_and_save(_op)
         log.info(f"Added account {account_id} for {platform} ({len(normalized)} cookies)")
 
     def get_cookie(self, platform: str) -> Optional[dict]:
@@ -136,40 +149,36 @@ class AccountPool:
 
         :return: {"id": ..., "cookies": [...], "user_agent": ...} 或 None
         """
-        self._auto_recover_cooldown(platform)
+        def _op():
+            self._auto_recover_cooldown(platform)
+            accounts = self._pool.get(platform, [])
+            active = [a for a in accounts if a["status"] == "active"]
+            if not active:
+                log.warning(f"No active accounts for {platform}")
+                return None
+            
+            AUTH_KEYS = {"pt_key", "pt_pin", "unb", "_tb_token_", "token", "sessionid",
+                         "auth_token", "access_token", "COOKIE_LOGIN_USER", "mall_login_token"}
+            
+            def _auth_strength(acc: dict) -> int:
+                cookies_ = acc.get("cookies", [])
+                if isinstance(cookies_, list):
+                    return sum(1 for c in cookies_ if c.get("name") in AUTH_KEYS)
+                return 0
+                
+            active_sorted = sorted(active, key=_auth_strength, reverse=True)
+            top = [a for a in active_sorted if _auth_strength(a) >= _auth_strength(active_sorted[0])]
+            import random
+            selected = random.choice(top)
+            selected["last_used"] = datetime.now().isoformat()
+            
+            return {
+                "id": selected["id"],
+                "cookies": selected["cookies"],
+                "user_agent": selected.get("user_agent", ""),
+            }
 
-        accounts = self._pool.get(platform, [])
-        active = [a for a in accounts if a["status"] == "active"]
-
-        if not active:
-            log.warning(f"No active accounts for {platform}")
-            return None
-
-        # 关键 auth Cookie 名称 (各平台)
-        AUTH_KEYS = {"pt_key", "pt_pin", "unb", "_tb_token_", "token", "sessionid",
-                     "auth_token", "access_token", "COOKIE_LOGIN_USER", "mall_login_token"}
-
-        def _auth_strength(acc: dict) -> int:
-            """返回账号 auth Cookie 数量 (越高越好)"""
-            cookies = acc.get("cookies", [])
-            if isinstance(cookies, list):
-                return sum(1 for c in cookies if c.get("name") in AUTH_KEYS)
-            return 0
-
-        # 按 auth 强度排序, 优先选强度最高的
-        active_sorted = sorted(active, key=_auth_strength, reverse=True)
-        # 在前 N 个强账号里随机 (避免固定选同一个)
-        top = [a for a in active_sorted if _auth_strength(a) >= _auth_strength(active_sorted[0])]
-        import random
-        selected = random.choice(top)
-        selected["last_used"] = datetime.now().isoformat()
-        self._save()
-
-        return {
-            "id": selected["id"],
-            "cookies": selected["cookies"],
-            "user_agent": selected.get("user_agent", ""),
-        }
+        return self._sync_and_save(_op)
 
     def get_playwright_cookies(self, platform: str) -> Optional[list[dict]]:
         """获取 Playwright 格式的 Cookie 列表
@@ -217,27 +226,27 @@ class AccountPool:
         return None
 
     def mark_failed(self, platform: str, account_id: str, max_fails: int = 3) -> None:
-        """标记账号失败一次, 超过上限则设为 invalid"""
-        for acc in self._pool.get(platform, []):
-            if acc["id"] == account_id:
-                acc["fail_count"] = acc.get("fail_count", 0) + 1
-                if acc["fail_count"] >= max_fails:
-                    acc["status"] = "invalid"
-                    log.warning(f"Account {account_id}@{platform} marked invalid after {max_fails} failures")
-                else:
-                    acc["status"] = "cooldown"
-                    acc["last_used"] = datetime.now().isoformat()
-                self._save()
-                return
+        def _op():
+            for acc in self._pool.get(platform, []):
+                if acc["id"] == account_id:
+                    acc["fail_count"] = acc.get("fail_count", 0) + 1
+                    if acc["fail_count"] >= max_fails:
+                        acc["status"] = "invalid"
+                        log.warning(f"Account {account_id}@{platform} marked invalid after {max_fails} failures")
+                    else:
+                        acc["status"] = "cooldown"
+                        acc["last_used"] = datetime.now().isoformat()
+                    return
+        self._sync_and_save(_op)
 
     def mark_active(self, platform: str, account_id: str) -> None:
-        """重新激活账号"""
-        for acc in self._pool.get(platform, []):
-            if acc["id"] == account_id:
-                acc["status"] = "active"
-                acc["fail_count"] = 0
-                self._save()
-                return
+        def _op():
+            for acc in self._pool.get(platform, []):
+                if acc["id"] == account_id:
+                    acc["status"] = "active"
+                    acc["fail_count"] = 0
+                    return
+        self._sync_and_save(_op)
 
     def get_stats(self) -> dict:
         """返回各平台账号池统计"""

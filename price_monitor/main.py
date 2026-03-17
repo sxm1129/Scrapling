@@ -32,10 +32,19 @@ def main():
     api_port = int(os.getenv("API_PORT", "8000"))
     scan_interval = int(os.getenv("SCAN_INTERVAL_HOURS", "12"))
 
+    # BackgroundScheduler runs in threads; create a fresh event loop per invocation
+    def _run_async(coro_fn, *args):
+        import asyncio
+        loop = asyncio.new_event_loop()
+        try:
+            loop.run_until_complete(coro_fn(*args))
+        finally:
+            loop.close()
+
     # 定时调度器
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        lambda: asyncio.run(run_scan_round()),
+        lambda: _run_async(run_scan_round),
         "interval",
         hours=scan_interval,
         id="scan_round",
@@ -45,15 +54,6 @@ def main():
     
     # Cookie 保活调度器: 每一小时跑一次
     from price_monitor.scheduler import run_cookie_keeper, run_sla_check, run_periodic_report
-
-    # BackgroundScheduler runs in threads; create a fresh event loop per invocation
-    def _run_async(coro_fn, *args):
-        import asyncio
-        loop = asyncio.new_event_loop()
-        try:
-            loop.run_until_complete(coro_fn(*args))
-        finally:
-            loop.close()
 
     scheduler.add_job(
         lambda: _run_async(run_cookie_keeper),
