@@ -143,7 +143,7 @@ export default function WorkOrdersPage() {
                 <div key={String(k)}><span style={{ color: "var(--text-muted)" }}>{k}：</span><strong>{String(v)}</strong></div>
               ))}
               <div style={{ gridColumn: "span 2" }}><span style={{ color: "var(--text-muted)" }}>商品：</span><strong>{selected.product_name}</strong></div>
-              {selected.canonical_url && <div style={{ gridColumn: "span 2", fontSize: "0.75rem", wordBreak: "break-all" }}><a href={selected.canonical_url} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>查看原链接</a></div>}
+              {selected.canonical_url && <div style={{ gridColumn: "span 2", fontSize: "0.75rem", wordBreak: "break-all" }}><a href={selected.canonical_url?.startsWith('http') ? selected.canonical_url : '#'} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>查看原链接</a></div>}
             </div>
 
             {/* Action Log Timeline */}

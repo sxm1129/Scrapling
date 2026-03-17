@@ -149,7 +149,7 @@ export default function OffersPage() {
                 <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{o.keyword || "-"}</td>
                 <td style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {o.canonical_url ? (
-                    <a href={o.canonical_url} target="_blank" rel="noreferrer"
+                    <a href={o.canonical_url?.startsWith('http') ? o.canonical_url : '#'} target="_blank" rel="noreferrer"
                        style={{ color: "var(--accent-blue)", textDecoration: "none" }}>
                       {o.product_name || o.product_id}
                     </a>
@@ -224,7 +224,7 @@ export default function OffersPage() {
               <DetailRow label="采集时间" value={detail.captured_at ? new Date(detail.captured_at).toLocaleString("zh-CN") : "-"} />
               {detail.canonical_url && (
                 <DetailRow label="商品链接" value={
-                  <a href={detail.canonical_url} target="_blank" rel="noreferrer"
+                  <a href={detail.canonical_url?.startsWith('http') ? detail.canonical_url : '#'} target="_blank" rel="noreferrer"
                      style={{ color: "var(--accent-blue)", wordBreak: "break-all" }}>
                     {detail.canonical_url}
                   </a>

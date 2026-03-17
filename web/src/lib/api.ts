@@ -49,10 +49,14 @@ export function handleError(e: unknown, context?: string): void {
   const prefix = context ? `${context}: ` : '';
   console.error(prefix, e);
   if (typeof window !== 'undefined') {
+    const existingToasts = document.querySelectorAll('.api-toast');
+    const offset = 20 + Array.from(existingToasts).reduce((acc, el) => acc + (el as HTMLElement).offsetHeight + 10, 0);
+    
     const toast = document.createElement('div');
+    toast.className = 'api-toast';
     toast.textContent = `${prefix}${msg}`;
     toast.style.position = 'fixed';
-    toast.style.top = '20px';
+    toast.style.top = `${offset}px`;
     toast.style.right = '20px';
     toast.style.backgroundColor = '#ef4444';
     toast.style.color = 'white';

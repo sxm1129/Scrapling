@@ -136,7 +136,7 @@ export default function ViolationsPage() {
               <Row label="白名单">{selected.is_whitelisted ? "✅ 已命中" : "❌ 未命中"}</Row>
               {selected.canonical_url && (
                 <Row label="链接">
-                  <a href={selected.canonical_url} target="_blank" rel="noopener"
+                  <a href={selected.canonical_url?.startsWith('http') ? selected.canonical_url : '#'} target="_blank" rel="noopener"
                     style={{ color: "var(--accent-blue)", wordBreak: "break-all" }}>
                     {selected.canonical_url.substring(0, 50)}...
                   </a>
