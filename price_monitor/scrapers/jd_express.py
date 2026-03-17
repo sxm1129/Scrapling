@@ -457,7 +457,7 @@ class JDExpressScraper(BaseScraper):
                 if (!sku_id) {
                     const links = card.querySelectorAll("a");
                     for (const a of links) {
-                        const m = (a.getAttribute("href") || "").match(/\/product\/(\d+)|goods_id=(\d+)|(?:id|skuid)=(\d+)/);
+                        const m = (a.getAttribute("href") || "").match(/\\/product\\/(\\d+)|goods_id=(\\d+)|(?:id|skuid)=(\\d+)/);
                         if (m) { sku_id = m[1] || m[2] || m[3] || ""; if (sku_id) break; }
                     }
                 }
@@ -487,8 +487,8 @@ class JDExpressScraper(BaseScraper):
                 const lines = bodyText.split("\\n").map(l => l.trim()).filter(Boolean);
                 let cur = { title: "", price: "", sku_id: "" };
                 for (const line of lines) {
-                    if ((line.includes("¥") || line.includes("￥")) && /\d+\.?\d*/.test(line)) {
-                        const pm = line.match(/(\d+\.?\d*)/);
+                    if ((line.includes("¥") || line.includes("￥")) && /\\d+\\.?\\d*/.test(line)) {
+                        const pm = line.match(/(\\d+\\.?\\d*)/);
                         if (pm && cur.price === "") cur.price = pm[1];
                     } else if (line.length > 8 && line.length < 150 && !line.includes("评价") &&
                                !line.includes("筛选") && !line.includes("综合") && /[\u4e00-\u9fa5]/.test(line)) {
@@ -504,7 +504,7 @@ class JDExpressScraper(BaseScraper):
                 // 提取链接中的 sku_id
                 const allLinks = document.querySelectorAll("a[href*='item.m.jd.com'], a[href*='/product/']");
                 const skuIds = Array.from(allLinks).map(a => {
-                    const m = a.href.match(/\/product\/(\d+)/);
+                    const m = a.href.match(/\\/product\\/(\\d+)/);
                     return m ? m[1] : "";
                 }).filter(Boolean);
                 for (let i = 0; i < text_items.length && i < skuIds.length; i++) {

@@ -310,7 +310,7 @@ class PinduoduoScraper(BaseScraper):
                 if (!goods_id) {
                     const links = card.querySelectorAll("a[href*='goods_id='], a[href*='goods2']");
                     for (const a of links) {
-                        const m = a.href.match(/goods_id=(\d+)/);
+                        const m = a.href.match(/goods_id=(\\d+)/);
                         if (m) { goods_id = m[1]; break; }
                     }
                 }

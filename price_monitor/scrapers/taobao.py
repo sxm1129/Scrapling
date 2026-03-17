@@ -350,7 +350,7 @@ class TaobaoScraper(BaseScraper):
                 const links = card.querySelectorAll("a[href*='item_id='], a[href*='/item/']");
                 let item_id = "";
                 for (const a of links) {
-                    const m = a.href.match(/item_id=(\d+)|\/item\/(\d+)/);
+                    const m = a.href.match(/item_id=(\\d+)|\\/item\\/(\\d+)/);
                     if (m) { item_id = m[1] || m[2]; break; }
                 }
                 // 提取价格
