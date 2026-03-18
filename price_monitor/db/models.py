@@ -263,3 +263,20 @@ class ReportSchedule(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class O2OStockLink(Base):
+    """O2O/前置仓单品分享链接池（无搜索API情况下的兜底高频监控方案）"""
+    __tablename__ = "o2o_stock_links"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    platform: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    product_url: Mapped[str] = mapped_column(String(500), nullable=False, comment="单品分享链接")
+    product_name: Mapped[Optional[str]] = mapped_column(String(200), comment="商品名称助记")
+    city_context: Mapped[Optional[dict]] = mapped_column(JSON, comment="定位上下文 (如 {'city': '深圳'}) 用作爬虫入参和匹配依据")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_o2o_active_platform", "is_active", "platform"),
+    )
