@@ -76,6 +76,11 @@ export default function ReportsPage() {
   const [webhookUrl, setWebhookUrl] = useState("");
   const [pushFeishu, setPushFeishu] = useState(false);
 
+  // Schedules
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [showAddSchedule, setShowAddSchedule] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({ name: "", cron_expression: "0 9 * * 1", report_type: "WEEKLY", webhook_url: "" });
+
   const loadKpis = (d = days) => {
     setLoading(true);
     const end = new Date().toISOString();
@@ -87,7 +92,21 @@ export default function ReportsPage() {
     api.listReports().then((r: any) => setReports(r.reports || [])).catch(e => handleError(e, "加载报表历史"));
   };
 
-  useEffect(() => { loadKpis(); loadHistory(); }, []);
+  const loadSchedules = () => {
+    api.getSchedules().then((r: any) => setSchedules(r.items || [])).catch(e => handleError(e, "加载投递配置"));
+  };
+
+  useEffect(() => { loadKpis(); loadHistory(); loadSchedules(); }, []);
+
+  const handleAddSchedule = async () => {
+    if (!scheduleForm.name || !scheduleForm.webhook_url) return alert("请填写完整信息");
+    try {
+      await api.createSchedule(scheduleForm);
+      setShowAddSchedule(false);
+      setScheduleForm({ name: "", cron_expression: "0 9 * * 1", report_type: "WEEKLY", webhook_url: "" });
+      loadSchedules();
+    } catch (e) { handleError(e, "添加投递配置"); }
+  };
 
   const handleGenerate = async () => {
     setGenLoading(true);
@@ -294,6 +313,55 @@ export default function ReportsPage() {
           </div>
         </>
       )}
+      {/* ─── 定时投递配置 (Scheduled Delivery) ─── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1rem" }}>
+        <SectionTitle title="自动编排与定时投递" icon={Activity} />
+        <button className="btn btn-primary" onClick={() => setShowAddSchedule(true)} style={{ height: "32px", fontSize: "0.85rem" }}>
+          + 新建投递规则
+        </button>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: "hidden", marginBottom: "2rem", border: "1px solid var(--border)" }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>规则名称</th><th>执行频率(CRON)</th><th>报告类型</th><th>接收方 (Webhook)</th><th>状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>暂无定时投递规则</td></tr>
+            ) : schedules.map(s => (
+              <tr key={s.id}>
+                <td style={{ fontWeight: 500 }}>{s.name}</td>
+                <td style={{ fontFamily: "monospace", color: "var(--accent-blue)" }}>{s.cron_expression}</td>
+                <td><span className="badge badge-active">{s.report_type}</span></td>
+                <td style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={s.webhook_url}>{s.webhook_url}</td>
+                <td>
+                  <span className={`badge ${s.is_active ? "badge-active" : "badge-expired"}`}>
+                    {s.is_active ? "活跃" : "已停用"}
+                  </span>
+                </td>
+                <td>
+                  <button className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.75rem", color: "var(--accent-red)" }}
+                    onClick={() => {
+                      if (confirm("确定要删除该规则吗？")) {
+                        api.deleteSchedule(s.id).then(loadSchedules).catch(e => handleError(e, "删除失败"));
+                      }
+                    }}>删除</button>
+                    
+                  <button className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.75rem", marginLeft: "0.5rem" }}
+                    onClick={() => {
+                        api.updateSchedule(s.id, { is_active: !s.is_active }).then(loadSchedules).catch(e => handleError(e, "更新失败"));
+                    }}>
+                    {s.is_active ? "停用" : "启用"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* ─── 报告生成与下发区 ─── */}
       <div style={{ padding: "2rem", background: "linear-gradient(135deg, rgba(30,41,59,0.5) 0%, rgba(15,23,42,0.8) 100%)", borderRadius: "1rem", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
@@ -344,6 +412,41 @@ export default function ReportsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Schedule Modal */}
+      {showAddSchedule && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div className="card" style={{ width: 400, padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: 700, marginBottom: "1rem" }}>新建投递规则</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>方案名称</label>
+                <input className="input" placeholder="例如: 每周简报投递" value={scheduleForm.name} onChange={e => setScheduleForm({...scheduleForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>CRON 表达式</label>
+                <input className="input" placeholder="0 9 * * 1" value={scheduleForm.cron_expression} onChange={e => setScheduleForm({...scheduleForm, cron_expression: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>包含数据维度</label>
+                <select className="input" value={scheduleForm.report_type} onChange={e => setScheduleForm({...scheduleForm, report_type: e.target.value})}>
+                  <option value="WEEKLY">周报 (WEEKLY)</option>
+                  <option value="MONTHLY">月报 (MONTHLY)</option>
+                  <option value="DAILY">日报 (DAILY)</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>Webhook 地址</label>
+                <input className="input" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..." value={scheduleForm.webhook_url} onChange={e => setScheduleForm({...scheduleForm, webhook_url: e.target.value})} />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleAddSchedule}>保存配置</button>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowAddSchedule(false)}>取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

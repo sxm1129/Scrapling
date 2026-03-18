@@ -207,4 +207,13 @@ export const api = {
     return fetchAPI(`/api/v1/reports${qs}`);
   },
   getReport: (id: number) => fetchAPI(`/api/v1/reports/${id}`),
+
+  // Schedules
+  getSchedules: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/schedules${qs}`);
+  },
+  createSchedule: (data: any) => fetchAPI('/api/schedules', { method: 'POST', body: JSON.stringify(data) }),
+  updateSchedule: (id: number, data: any) => fetchAPI(`/api/schedules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSchedule: (id: number) => fetchAPI(`/api/schedules/${id}`, { method: 'DELETE' }),
 };
