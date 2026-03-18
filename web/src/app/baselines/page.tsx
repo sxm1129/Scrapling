@@ -62,8 +62,11 @@ export default function BaselinesPage() {
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>
-                暂无基准价，点击右上角添加
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: "4rem 2rem" }}>
+                <div style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.4 }}>💰</div>
+                <p style={{ color: "var(--text-muted)", marginBottom: "0.5rem", fontSize: "0.95rem" }}>还没有设置基准价格</p>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "1rem" }}>设置基准价后，系统将自动对比采集到的价格，发现违规低价</p>
+                <button className="btn btn-primary" onClick={() => setShowAdd(true)}>添加基准价</button>
               </td></tr>
             )}
           </tbody>

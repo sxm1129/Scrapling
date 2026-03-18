@@ -69,7 +69,14 @@ export default function KeywordsPage() {
         ))}
       </div>
       {items.length === 0 && (
-        <p style={{ color: "var(--text-muted)", textAlign: "center", marginTop: "2rem" }}>暂无关键词</p>
+        <div className="card" style={{ textAlign: "center", padding: "4rem 2rem" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.4 }}>🔍</div>
+          <p style={{ color: "var(--text-muted)", marginBottom: "1rem", fontSize: "0.95rem" }}>还没有添加任何关键词</p>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "1.5rem" }}>添加关键词后，系统将自动在各电商平台搜索并监测价格</p>
+          <button className="btn btn-primary" onClick={() => document.querySelector<HTMLInputElement>('.input')?.focus()}>
+            立即添加关键词
+          </button>
+        </div>
       )}
     </div>
   );
