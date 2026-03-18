@@ -142,3 +142,93 @@ async def run_periodic_report(report_type: str = "WEEKLY"):
         log.error(f"Periodic report failed: {e}", exc_info=True)
     finally:
         session.close()
+
+
+async def run_playwright_scan(
+    platforms: list[str] | None = None,
+    keywords: list[str] | None = None,
+):
+    """
+    Playwright 行为仿真采集轮次（独立方案，不影响现有体系）
+    
+    - 当现有 StealthyFetcher 采集失败时作为 fallback 兜底
+    - 采集结果通过 ProductDetail.to_product_price_dict() 转为兼容格式存库
+    - 采集失败时推送飞书告警
+
+    参数:
+        platforms: 要采集的平台列表，默认从 SCRAPER_REGISTRY 取所有平台
+        keywords:  要搜索的关键词列表，默认从 DB 的 BaselinePrice 表取
+    """
+    import os
+    from price_monitor.playwright_engine.scrapers import SCRAPER_REGISTRY, get_scraper
+    from price_monitor.playwright_engine.fallback import PlaywrightFallbackEngine
+    from price_monitor.db.session import get_session_factory
+    from price_monitor.db import crud
+
+    log.info("=" * 60)
+    log.info("Starting Playwright behavioral scrape round...")
+    log.info("=" * 60)
+
+    # 确定要采集的平台
+    active_platforms = platforms or list(SCRAPER_REGISTRY.keys())
+
+    # 确定关键词（从 BaselinePrice 表取，或使用传入参数）
+    if not keywords:
+        factory = get_session_factory()
+        with factory() as session:
+            baselines = crud.list_baselines(session)
+            keywords = list({b.keyword for b in baselines if b.keyword})
+        if not keywords:
+            log.warning("[playwright_scan] No keywords found in BaselinePrice table, skipping")
+            return
+
+    log.info(f"[playwright_scan] Platforms: {active_platforms}")
+    log.info(f"[playwright_scan] Keywords: {keywords}")
+
+    engine = PlaywrightFallbackEngine()
+    total_success = 0
+    total_fail = 0
+
+    for platform in active_platforms:
+        try:
+            scraper = get_scraper(platform)
+        except ValueError as e:
+            log.warning(f"[playwright_scan] No scraper for {platform}: {e}")
+            continue
+
+        for keyword in keywords:
+            log.info(f"[playwright_scan] {platform} / '{keyword}'")
+            try:
+                results = await engine.scrape_by_keyword(
+                    platform=platform,
+                    keyword=keyword,
+                    scraper=scraper,
+                    limit=5,
+                )
+                if results:
+                    # 存入数据库（暂以 JSON 日志形式记录，完整 DB 入库在后续迭代中完成）
+                    import json
+                    log_dir = os.path.join("data", "playwright_results")
+                    os.makedirs(log_dir, exist_ok=True)
+                    import time
+                    log_path = os.path.join(log_dir, f"{platform}_{keyword}_{int(time.time())}.json")
+                    with open(log_path, "w", encoding="utf-8") as f:
+                        json.dump(
+                            [r.to_product_price_dict() for r in results],
+                            f, ensure_ascii=False, indent=2, default=str
+                        )
+                    total_success += len(results)
+                    log.info(f"[playwright_scan] ✅ {platform}/{keyword}: {len(results)} results saved to {log_path}")
+                else:
+                    total_fail += 1
+            except Exception as e:
+                log.error(f"[playwright_scan] Error {platform}/{keyword}: {e}", exc_info=True)
+                total_fail += 1
+
+            # 平台间间隔（防止频率过高）
+            import asyncio
+            import random
+            await asyncio.sleep(random.uniform(5, 15))
+
+    log.info(f"[playwright_scan] Round complete. Success={total_success} | Fail={total_fail}")
+
