@@ -127,18 +127,40 @@ class HumanActions:
     ):
         """
         逐字符打字，每个字符之间随机延迟，模拟真实打字节奏。
-        中文字符会被直接 fill() 因为 type() 对 IME 处理有限。
+        对于懒加载 / visibility:hidden 的输入框，先通过 JS click 激活。
         """
-        await self.human_click(selector)
+        # 先等待元素存在于 DOM (attached)，不要求 visible
+        elem = await self.page.wait_for_selector(selector, state="attached", timeout=10_000)
+        if not elem:
+            raise ValueError(f"Element not found: {selector}")
+
+        # 尝试 JS 方案激活输入框（对付 visibility:hidden / display:none）
+        try:
+            await self.page.evaluate(
+                f"document.querySelector('{selector}')?.dispatchEvent(new MouseEvent('click', {{bubbles: true}}))"
+            )
+            await asyncio.sleep(0.3)
+        except Exception:
+            pass
+
+        # 再次 click（正常 Playwright click，现在元素应该可见了）
+        try:
+            await elem.click(force=True)
+        except Exception:
+            pass
+
+        await self.random_pause(200, 500)
 
         if clear_first:
-            await self.page.fill(selector, "")  # 清空现有内容
+            # Ctrl+A → Backspace 方式清除，不要求 visibility（避免 fill() 的可见性检查）
+            await self.page.keyboard.press("ControlOrMeta+a")
+            await asyncio.sleep(0.1)
+            await self.page.keyboard.press("Backspace")
             await self.random_pause(100, 300)
 
-        # 检测是否含有中文（中文用 fill 一次性输入更稳定）
+        # 检测是否含有中文
         has_chinese = any("\u4e00" <= c <= "\u9fff" for c in text)
         if has_chinese:
-            # 混合内容：分段处理
             buffer = ""
             for char in text:
                 if "\u4e00" <= char <= "\u9fff":
