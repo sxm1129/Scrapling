@@ -271,3 +271,28 @@ select.input {
   padding: 0.75rem;
 }
 
+/* Card Hover Micro-Animation */
+.card {
+  transition: border-color 0.2s, transform 0.15s ease, box-shadow 0.2s;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .sidebar { width: 60px !important; overflow: hidden; }
+  .sidebar a span:last-child,
+  .sidebar h1, .sidebar p,
+  .sidebar .sidebar-footer-content { display: none; }
+  .sidebar a { justify-content: center; padding: 0.75rem; }
+}
+
+@media (max-width: 768px) {
+  main { padding: 1rem !important; }
+  .stat-card .number { font-size: 1.5rem; }
+  .data-table th, .data-table td { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+  .filter-bar { flex-direction: column; gap: 0.5rem; }
+}
