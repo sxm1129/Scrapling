@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { api, handleError } from "@/lib/api";
+import ResizableTable from "@/components/ResizableTable";
 
 const REJECT_REASONS = [
   "价格未恢复",
@@ -112,46 +113,48 @@ export default function WhitelistPage() {
       )}
 
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th style={{ width: 40, textAlign: "center" }}>
-                <input 
-                  type="checkbox" 
-                  checked={items.length > 0 && selected.size === items.length}
-                  onChange={handleSelectAll}
-                />
-              </th>
-              <th>类型</th><th>匹配模式</th><th>平台</th><th>原因</th><th>审批人</th><th>状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((w: any) => (
-              <tr key={w.id} style={{ background: selected.has(w.id) ? "var(--bg-card-hover)" : "transparent" }}>
-                <td style={{ textAlign: "center" }}>
+        <ResizableTable id="whitelist_table" stickyFirstCol={true}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: 40, textAlign: "center" }}>
                   <input 
                     type="checkbox" 
-                    checked={selected.has(w.id)}
-                    onChange={(e) => handleSelect(w.id, e.target.checked)}
+                    checked={items.length > 0 && selected.size === items.length}
+                    onChange={handleSelectAll}
                   />
-                </td>
-                <td><span className="badge badge-active">{w.rule_type}</span></td>
-                <td style={{ fontFamily: "monospace" }}>{w.match_pattern}</td>
-                <td>{w.platform || "全部"}</td>
-                <td style={{ color: "var(--text-muted)" }}>{w.reason || "-"}</td>
-                <td style={{ color: "var(--text-muted)" }}>{w.approved_by || "-"}</td>
-                <td>
-                  <span className={`badge ${w.status === "ACTIVE" ? "badge-active" : "badge-expired"}`}>
-                    {w.status}
-                  </span>
-                </td>
+                </th>
+                <th>类型</th><th>匹配模式</th><th>平台</th><th>原因</th><th>审批人</th><th>状态</th>
               </tr>
-            ))}
-            {items.length === 0 && (
-              <tr><td colSpan={7} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无白名单规则</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((w: any) => (
+                <tr key={w.id} style={{ background: selected.has(w.id) ? "var(--bg-card-hover)" : "transparent" }}>
+                  <td style={{ textAlign: "center" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selected.has(w.id)}
+                      onChange={(e) => handleSelect(w.id, e.target.checked)}
+                    />
+                  </td>
+                  <td><span className="badge badge-active">{w.rule_type}</span></td>
+                  <td style={{ fontFamily: "monospace" }}>{w.match_pattern}</td>
+                  <td>{w.platform || "全部"}</td>
+                  <td style={{ color: "var(--text-muted)" }}>{w.reason || "-"}</td>
+                  <td style={{ color: "var(--text-muted)" }}>{w.approved_by || "-"}</td>
+                  <td>
+                    <span className={`badge ${w.status === "ACTIVE" ? "badge-active" : "badge-expired"}`}>
+                      {w.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && (
+                <tr><td colSpan={7} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无白名单规则</td></tr>
+              )}
+            </tbody>
+          </table>
+        </ResizableTable>
       </div>
 
       {/* Revoke Modal */}

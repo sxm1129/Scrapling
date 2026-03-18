@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { api, handleError } from "@/lib/api";
+import ResizableTable from "@/components/ResizableTable";
 
 const PLATFORM_LABELS: Record<string, string> = {
   taobao: "淘宝", tmall: "天猫", jd_express: "京东秒送",
@@ -57,50 +58,52 @@ export default function ViolationsPage() {
 
       {/* Table */}
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>严重度</th>
-              <th>平台</th>
-              <th>商品名称</th>
-              <th>到手价</th>
-              <th>基准价</th>
-              <th>差额%</th>
-              <th>店铺</th>
-              <th>发货城市</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((v: any) => (
-              <tr key={v.id}>
-                <td style={{ color: "var(--text-muted)" }}>#{v.id}</td>
-                <td><span className={`badge badge-${v.severity.toLowerCase()}`}>{v.severity}</span></td>
-                <td>{PLATFORM_LABELS[v.platform] || v.platform}</td>
-                <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {v.product_name}
-                </td>
-                <td style={{ color: "var(--accent-red)", fontWeight: 600 }}>¥{v.final_price}</td>
-                <td>¥{v.baseline_price}</td>
-                <td style={{ color: "var(--accent-orange)" }}>-{(v.gap_percent * 100).toFixed(1)}%</td>
-                <td style={{ color: "var(--text-muted)", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {v.shop_name || "-"}
-                </td>
-                <td style={{ color: "var(--text-muted)" }}>{v.ship_from_city || "-"}</td>
-                <td>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                    onClick={() => setSelected(v)}>
-                    详情
-                  </button>
-                </td>
+        <ResizableTable id="violations_table" stickyFirstCol={true}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>严重度</th>
+                <th>平台</th>
+                <th>商品名称</th>
+                <th>到手价</th>
+                <th>基准价</th>
+                <th>差额%</th>
+                <th>店铺</th>
+                <th>发货城市</th>
+                <th>操作</th>
               </tr>
-            ))}
-            {items.length === 0 && (
-              <tr><td colSpan={10} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无违规记录</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((v: any) => (
+                <tr key={v.id}>
+                  <td style={{ color: "var(--text-muted)" }}>#{v.id}</td>
+                  <td><span className={`badge badge-${v.severity.toLowerCase()}`}>{v.severity}</span></td>
+                  <td>{PLATFORM_LABELS[v.platform] || v.platform}</td>
+                  <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {v.product_name}
+                  </td>
+                  <td style={{ color: "var(--accent-red)", fontWeight: 600 }}>¥{v.final_price}</td>
+                  <td>¥{v.baseline_price}</td>
+                  <td style={{ color: "var(--accent-orange)" }}>-{(v.gap_percent * 100).toFixed(1)}%</td>
+                  <td style={{ color: "var(--text-muted)", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {v.shop_name || "-"}
+                  </td>
+                  <td style={{ color: "var(--text-muted)" }}>{v.ship_from_city || "-"}</td>
+                  <td>
+                    <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                      onClick={() => setSelected(v)}>
+                      详情
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && (
+                <tr><td colSpan={10} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无违规记录</td></tr>
+              )}
+            </tbody>
+          </table>
+        </ResizableTable>
       </div>
 
       {/* Pagination */}

@@ -113,6 +113,48 @@ body {
   background: var(--bg-card-hover);
 }
 
+/* Resizable Table Wrapper */
+.resizable-table-container {
+  overflow-x: auto;
+  position: relative;
+  width: 100%;
+}
+.resizable-table-container table {
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+}
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  background-color: transparent;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+.resize-handle:hover,
+.resize-handle.active {
+  background-color: var(--accent-blue);
+}
+
+/* Sticky First Column */
+.data-table th.sticky-col,
+.data-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background-color: var(--bg-card); /* Inherit card bg to obscure scrolling content */
+}
+.data-table th.sticky-col {
+  z-index: 21; /* Keep TH above TD */
+}
+.data-table tr:hover td.sticky-col {
+  background-color: var(--bg-card-hover);
+}
+
 /* Badges */
 .badge {
   display: inline-flex;

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { api, handleError } from "@/lib/api";
+import ResizableTable from "@/components/ResizableTable";
 
 const PLATFORM_LABELS: Record<string, string> = {
   taobao: "淘宝", tmall: "天猫", jd_express: "京东秒送",
@@ -119,65 +120,67 @@ export default function OffersPage() {
       </div>
 
       {/* Table */}
-      <div className="card" style={{ overflow: "auto" }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>平台</th>
-              <th>关键词</th>
-              <th style={{ maxWidth: 280 }}>商品名称</th>
-              <th>原价</th>
-              <th>到手价</th>
-              <th>店铺</th>
-              <th>发货地</th>
-              <th>采集时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={9} style={{ textAlign: "center", color: "var(--text-muted)" }}>加载中...</td></tr>
-            ) : offers.length === 0 ? (
-              <tr><td colSpan={9} style={{ textAlign: "center", color: "var(--text-muted)" }}>暂无采集数据</td></tr>
-            ) : offers.map((o: any) => (
-              <tr key={o.id}>
-                <td>
-                  <span className="badge" style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)" }}>
-                    {PLATFORM_LABELS[o.platform] || o.platform}
-                  </span>
-                </td>
-                <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{o.keyword || "-"}</td>
-                <td style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {o.canonical_url ? (
-                    <a href={o.canonical_url?.startsWith('http') ? o.canonical_url : '#'} target="_blank" rel="noreferrer"
-                       style={{ color: "var(--accent-blue)", textDecoration: "none" }}>
-                      {o.product_name || o.product_id}
-                    </a>
-                  ) : (o.product_name || o.product_id)}
-                </td>
-                <td style={{ color: "var(--text-muted)" }}>
-                  {o.original_price > 0 ? `¥${o.original_price}` : "-"}
-                </td>
-                <td style={{ color: "var(--accent-green)", fontWeight: 600 }}>
-                  ¥{o.final_price || o.raw_price || 0}
-                </td>
-                <td style={{ fontSize: "0.75rem", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {o.shop_name || "-"}
-                </td>
-                <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{o.ship_from_city || "-"}</td>
-                <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                  {o.captured_at ? new Date(o.captured_at).toLocaleString("zh-CN") : "-"}
-                </td>
-                <td>
-                  <button className="btn btn-ghost" style={{ fontSize: "0.625rem", padding: "2px 8px" }}
-                    onClick={() => setDetail(o)}>
-                    详情
-                  </button>
-                </td>
+      <div className="card" style={{ overflow: "auto", padding: 0 }}>
+        <ResizableTable id="offers_table" stickyFirstCol={true}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>平台</th>
+                <th>关键词</th>
+                <th style={{ maxWidth: 280 }}>商品名称</th>
+                <th>原价</th>
+                <th>到手价</th>
+                <th>店铺</th>
+                <th>发货地</th>
+                <th>采集时间</th>
+                <th>操作</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={9} style={{ textAlign: "center", color: "var(--text-muted)" }}>加载中...</td></tr>
+              ) : offers.length === 0 ? (
+                <tr><td colSpan={9} style={{ textAlign: "center", color: "var(--text-muted)" }}>暂无采集数据</td></tr>
+              ) : offers.map((o: any) => (
+                <tr key={o.id}>
+                  <td>
+                    <span className="badge" style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)" }}>
+                      {PLATFORM_LABELS[o.platform] || o.platform}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{o.keyword || "-"}</td>
+                  <td style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {o.canonical_url ? (
+                      <a href={o.canonical_url?.startsWith('http') ? o.canonical_url : '#'} target="_blank" rel="noreferrer"
+                         style={{ color: "var(--accent-blue)", textDecoration: "none" }}>
+                        {o.product_name || o.product_id}
+                      </a>
+                    ) : (o.product_name || o.product_id)}
+                  </td>
+                  <td style={{ color: "var(--text-muted)" }}>
+                    {o.original_price > 0 ? `¥${o.original_price}` : "-"}
+                  </td>
+                  <td style={{ color: "var(--accent-green)", fontWeight: 600 }}>
+                    ¥{o.final_price || o.raw_price || 0}
+                  </td>
+                  <td style={{ fontSize: "0.75rem", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {o.shop_name || "-"}
+                  </td>
+                  <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{o.ship_from_city || "-"}</td>
+                  <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    {o.captured_at ? new Date(o.captured_at).toLocaleString("zh-CN") : "-"}
+                  </td>
+                  <td>
+                    <button className="btn btn-ghost" style={{ fontSize: "0.625rem", padding: "2px 8px" }}
+                      onClick={() => setDetail(o)}>
+                      详情
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ResizableTable>
       </div>
 
       {/* Pagination */}

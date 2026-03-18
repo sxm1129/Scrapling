@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api, handleError } from "@/lib/api";
+import ResizableTable from "@/components/ResizableTable";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip,
@@ -165,32 +166,34 @@ export default function WorkOrdersPage() {
 
       {/* Table */}
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <table className="data-table">
-          <thead>
-            <tr><th>ID</th><th>级别</th><th>状态</th><th>平台</th><th>商品</th><th>违规价</th><th>基准价</th><th>差额%</th><th>责任人</th><th>SLA截止</th><th>操作</th></tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={11} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>加载中...</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={11} style={{ textAlign: "center", padding: "2rem" }}>暂无工单</td></tr>
-            ) : items.map((wo: any) => (
-              <tr key={wo.id}>
-                <td style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>#{wo.id}</td>
-                <td><span className="badge" style={{ background: SEVERITY_COLORS[wo.severity] + "22", color: SEVERITY_COLORS[wo.severity], padding: "2px 8px", borderRadius: 4, fontSize: "0.75rem", fontWeight: 700 }}>{wo.severity}</span></td>
-                <td><span style={{ color: STATUS_COLORS[wo.status] || "inherit", fontWeight: 600, fontSize: "0.8rem" }}>{STATUS_LABELS[wo.status] || wo.status}</span></td>
-                <td style={{ fontSize: "0.8rem" }}>{wo.platform}</td>
-                <td style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.85rem" }} title={wo.product_name}>{wo.product_name}</td>
-                <td style={{ color: "#ef4444", fontWeight: 700 }}>¥{wo.violation_price ?? "-"}</td>
-                <td>¥{wo.baseline_price ?? "-"}</td>
-                <td style={{ color: wo.gap_percent > 0.2 ? "#ef4444" : "inherit" }}>{wo.gap_percent ? (wo.gap_percent * 100).toFixed(1) + "%" : "-"}</td>
-                <td style={{ fontSize: "0.8rem" }}>{wo.owner_name || <span style={{ color: "var(--text-muted)" }}>未分配</span>}</td>
-                <td style={{ fontSize: "0.75rem", ...slaClass(wo) }}>{wo.sla_due_at ? new Date(wo.sla_due_at).toLocaleString("zh-CN") : "-"}{wo.sla_overdue ? " ⚠️" : ""}</td>
-                <td><button className="btn btn-sm" onClick={() => openDetail(wo)}>详情</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ResizableTable id="workorders_table" stickyFirstCol={true}>
+          <table className="data-table">
+            <thead>
+              <tr><th>ID</th><th>级别</th><th>状态</th><th>平台</th><th>商品</th><th>违规价</th><th>基准价</th><th>差额%</th><th>责任人</th><th>SLA截止</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={11} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>加载中...</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={11} style={{ textAlign: "center", padding: "2rem" }}>暂无工单</td></tr>
+              ) : items.map((wo: any) => (
+                <tr key={wo.id}>
+                  <td style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>#{wo.id}</td>
+                  <td><span className="badge" style={{ background: SEVERITY_COLORS[wo.severity] + "22", color: SEVERITY_COLORS[wo.severity], padding: "2px 8px", borderRadius: 4, fontSize: "0.75rem", fontWeight: 700 }}>{wo.severity}</span></td>
+                  <td><span style={{ color: STATUS_COLORS[wo.status] || "inherit", fontWeight: 600, fontSize: "0.8rem" }}>{STATUS_LABELS[wo.status] || wo.status}</span></td>
+                  <td style={{ fontSize: "0.8rem" }}>{wo.platform}</td>
+                  <td style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.85rem" }} title={wo.product_name}>{wo.product_name}</td>
+                  <td style={{ color: "#ef4444", fontWeight: 700 }}>¥{wo.violation_price ?? "-"}</td>
+                  <td>¥{wo.baseline_price ?? "-"}</td>
+                  <td style={{ color: wo.gap_percent > 0.2 ? "#ef4444" : "inherit" }}>{wo.gap_percent ? (wo.gap_percent * 100).toFixed(1) + "%" : "-"}</td>
+                  <td style={{ fontSize: "0.8rem" }}>{wo.owner_name || <span style={{ color: "var(--text-muted)" }}>未分配</span>}</td>
+                  <td style={{ fontSize: "0.75rem", ...slaClass(wo) }}>{wo.sla_due_at ? new Date(wo.sla_due_at).toLocaleString("zh-CN") : "-"}{wo.sla_overdue ? " ⚠️" : ""}</td>
+                  <td><button className="btn btn-sm" onClick={() => openDetail(wo)}>详情</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ResizableTable>
       </div>
 
       {/* Pagination */}
