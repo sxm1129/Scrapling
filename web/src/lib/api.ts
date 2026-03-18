@@ -110,6 +110,8 @@ export const api = {
   getWhitelist: () => fetchAPI('/api/whitelist'),
   createWhitelist: (data: any) => fetchAPI('/api/whitelist', { method: 'POST', body: JSON.stringify(data) }),
   revokeWhitelist: (id: number) => fetchAPI(`/api/whitelist/${id}`, { method: 'DELETE' }),
+  batchApproveWhitelist: (ids: number[]) => fetchAPI('/api/whitelist/batch-approve', { method: 'POST', body: JSON.stringify({ ids }) }),
+  batchRevokeWhitelist: (ids: number[], reason?: string) => fetchAPI('/api/whitelist/batch-revoke', { method: 'POST', body: JSON.stringify({ ids, reason }) }),
 
   // Cookies
   getCookies: () => fetchAPI('/api/cookies'),
