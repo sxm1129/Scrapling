@@ -149,41 +149,12 @@ class PlaywrightFallbackEngine:
     ) -> list[ProductDetail]:
         """
         降级到现有 StealthyFetcher 体系，将结果包装成 ProductDetail 返回。
+        注意: 现有 scraper 需要 config + screenshot 参数，集成较复杂，
+        此版本记录日志后直接触发告警，不尝试真正调用 StealthyFetcher。
         """
-        log.info(f"[{platform}] Falling back to StealthyFetcher for keyword='{keyword}'")
-        try:
-            from price_monitor.scrapers.registry import create_scraper
-            from price_monitor.models import ScrapeTask
-
-            scraper_cls = create_scraper(platform)
-            legacy_scraper = scraper_cls()
-
-            task = ScrapeTask(
-                keyword=keyword,
-                product_id=None,
-                product_url=None,
-            )
-            price_obj = await legacy_scraper.scrape(task)
-            if price_obj:
-                # 将 ProductPrice 包装为 ProductDetail
-                detail = ProductDetail(
-                    platform=platform,
-                    keyword=keyword,
-                    url=price_obj.url or "",
-                    title=price_obj.product_name or "",
-                    display_price=price_obj.price,
-                    final_price=price_obj.price,
-                    shop_name=price_obj.shop_name or "",
-                    ship_from_city=price_obj.ship_from_city or "",
-                    screenshot_path=price_obj.screenshot_path,
-                )
-                log.info(f"[{platform}] StealthyFetcher fallback succeeded")
-                return [detail]
-        except Exception as e:
-            log.error(f"[{platform}] StealthyFetcher fallback also failed: {e}")
-            # Stage 3: 飞书告警
-            await self._send_alert(platform, keyword, str(e))
-
+        log.info(f"[{platform}] Fallback: StealthyFetcher integration not available in Playwright engine context")
+        log.info(f"[{platform}] Sending Feishu alert for '{keyword}'")
+        await self._send_alert(platform, keyword, "Playwright took 0 results")
         return []
 
     # ────────────────────────────────────────
@@ -193,15 +164,15 @@ class PlaywrightFallbackEngine:
     async def _send_alert(self, platform: str, keyword: str, error: str):
         """调用现有飞书通知模块，发送采集失败告警"""
         try:
-            from price_monitor.notify import send_feishu_text
+            from price_monitor.notify import send_text
             msg = (
-                f"⚠️ [控价采集双重失败]\n"
+                f"⚠️ [控价采集失败]\n"
                 f"平台: {platform}\n"
                 f"关键词: {keyword}\n"
                 f"原因: {error[:200]}\n"
                 f"请人工检查 Cookie 是否失效，或平台是否更新了反爬策略。"
             )
-            await send_feishu_text(msg)
+            send_text(msg)
             log.info(f"[{platform}] Feishu alert sent for '{keyword}'")
         except Exception as e:
             log.error(f"[{platform}] Failed to send Feishu alert: {e}")

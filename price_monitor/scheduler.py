@@ -145,8 +145,8 @@ async def run_periodic_report(report_type: str = "WEEKLY"):
 
 
 async def run_playwright_scan(
-    platforms: list[str] | None = None,
-    keywords: list[str] | None = None,
+    platforms=None,   # type: Optional[list]
+    keywords=None,    # type: Optional[list]
 ):
     """
     Playwright 行为仿真采集轮次（独立方案，不影响现有体系）
@@ -172,15 +172,22 @@ async def run_playwright_scan(
     # 确定要采集的平台
     active_platforms = platforms or list(SCRAPER_REGISTRY.keys())
 
-    # 确定关键词（从 BaselinePrice 表取，或使用传入参数）
+    # 确定关键词（从 SearchKeyword 表取，或使用传入参数）
     if not keywords:
         factory = get_session_factory()
         with factory() as session:
-            baselines = crud.list_baselines(session)
-            keywords = list({b.keyword for b in baselines if b.keyword})
+            kw_objs = crud.get_active_keywords(session)
+            keywords = [k.keyword for k in kw_objs if k.keyword]
+        # fallback: 从 BaselinePrice 表取
         if not keywords:
-            log.warning("[playwright_scan] No keywords found in BaselinePrice table, skipping")
+            factory = get_session_factory()
+            with factory() as session:
+                baselines = crud.get_baselines(session)
+                keywords = list({b.keyword for b in baselines if getattr(b, 'keyword', None)})
+        if not keywords:
+            log.warning("[playwright_scan] No keywords found in DB, skipping")
             return
+
 
     log.info(f"[playwright_scan] Platforms: {active_platforms}")
     log.info(f"[playwright_scan] Keywords: {keywords}")
