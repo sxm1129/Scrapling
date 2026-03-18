@@ -1,6 +1,11 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { api, handleError } from "@/lib/api";
+import {
+  PieChart, Pie, Cell, BarChart, Bar,
+  XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip,
+  CartesianGrid
+} from "recharts";
 
 const SEVERITY_COLORS: Record<string, string> = {
   P0: "#ef4444", P1: "#f97316", P2: "#eab308",
@@ -22,6 +27,7 @@ export default function WorkOrdersPage() {
   const [resolveNote, setResolveNote] = useState("");
   const [actionNote, setActionNote] = useState("");
   const [showResolve, setShowResolve] = useState(false);
+  const [allItems, setAllItems] = useState<any[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -33,9 +39,37 @@ export default function WorkOrdersPage() {
       setItems(r.workorders || []);
       setTotal(r.total || 0);
     }).catch((e) => handleError(e, "加载工单")).finally(() => setLoading(false));
+    // Also load all workorders for stats
+    api.getWorkOrders({ page_size: "500" }).then((r: any) => setAllItems(r.workorders || [])).catch(() => {});
   }, [page, filters]);
 
   useEffect(() => { load(); }, [load]);
+
+  // SLA Stats
+  const slaStats = useMemo(() => {
+    const open = allItems.filter(i => i.status === "OPEN").length;
+    const ip = allItems.filter(i => i.status === "IN_PROGRESS").length;
+    const resolved = allItems.filter(i => i.status === "RESOLVED").length;
+    const overdue = allItems.filter(i => i.sla_overdue).length;
+    const onTime = Math.max(0, allItems.length - overdue);
+    const slaRate = allItems.length > 0 ? ((onTime / allItems.length) * 100).toFixed(1) : "100";
+    return { open, ip, resolved, overdue, onTime, slaRate, total: allItems.length };
+  }, [allItems]);
+
+  // Funnel data
+  const funnelData = useMemo(() => [
+    { name: "待处理", value: slaStats.open, color: STATUS_COLORS.OPEN },
+    { name: "处理中", value: slaStats.ip, color: STATUS_COLORS.IN_PROGRESS },
+    { name: "已解决", value: slaStats.resolved, color: STATUS_COLORS.RESOLVED },
+  ], [slaStats]);
+
+  // SLA ring data
+  const slaRingData = useMemo(() => [
+    { name: "按时", value: slaStats.onTime, color: "#22c55e" },
+    { name: "逾期", value: slaStats.overdue, color: "#ef4444" },
+  ].filter(d => d.value > 0), [slaStats]);
+
+  if (slaRingData.length === 0) slaRingData.push({ name: "无数据", value: 1, color: "#334155" });
 
   const openDetail = (wo: any) => { setSelected(wo); setShowResolve(false); setResolveNote(""); setActionNote(""); };
 
@@ -56,7 +90,7 @@ export default function WorkOrdersPage() {
   };
 
   const slaClass = (wo: any) => {
-    if (wo.sla_overdue) return { color: "#ef4444", fontWeight: 700 };
+    if (wo.sla_overdue) return { color: "#ef4444", fontWeight: 700 as const };
     return {};
   };
 
@@ -64,16 +98,53 @@ export default function WorkOrdersPage() {
     <div className="animate-in">
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>工单管理</h1>
 
-      {/* KPI summary bar */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        {["OPEN", "IN_PROGRESS", "RESOLVED"].map(s => (
-          <div key={s} className="card" style={{ flex: 1, minWidth: 120, padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: STATUS_COLORS[s] }}>
-              {items.filter(i => i.status === s).length}
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 4 }}>{STATUS_LABELS[s]}</div>
+      {/* SLA Health Dashboard */}
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+        {/* SLA Ring Gauge */}
+        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: "1rem" }}>
+          <ResponsiveContainer width={140} height={140}>
+            <PieChart>
+              <Pie data={slaRingData} cx="50%" cy="50%" innerRadius={42} outerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
+                {slaRingData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ position: "absolute", textAlign: "center" }}>
+            <div style={{ fontSize: "1.3rem", fontWeight: 700, color: Number(slaStats.slaRate) >= 80 ? "#22c55e" : "#ef4444" }}>{slaStats.slaRate}%</div>
+            <div style={{ fontSize: "0.6rem", color: "var(--text-muted)" }}>SLA达标</div>
           </div>
-        ))}
+        </div>
+
+        {/* KPI Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          {[
+            { label: "待处理", value: slaStats.open, color: "#ef4444" },
+            { label: "处理中", value: slaStats.ip, color: "#f97316" },
+            { label: "已解决", value: slaStats.resolved, color: "#22c55e" },
+            { label: "SLA逾期", value: slaStats.overdue, color: "#ef4444" },
+          ].map(s => (
+            <div key={s.label} className="card" style={{ textAlign: "center", padding: "0.75rem" }}>
+              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Funnel Bar Chart */}
+        <div className="card" style={{ padding: "1rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.5rem" }}>工单处理漏斗</div>
+          <ResponsiveContainer width="100%" height={130}>
+            <BarChart data={funnelData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#334155" opacity={0.3} />
+              <XAxis type="number" hide />
+              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: "#e2e8f0", fontSize: 12 }} width={60} />
+              <RechartsTooltip />
+              <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={22}>
+                {funnelData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Filters */}

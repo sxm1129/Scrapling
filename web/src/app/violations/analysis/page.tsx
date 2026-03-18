@@ -258,6 +258,63 @@ export default function ViolationsAnalysisPage() {
               </div>
             </div>
           </div>
+
+          {/* ─── Row 2: City Distribution + Gap Histogram ─── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem" }}>
+            {/* City Distribution */}
+            <div className="card" style={{ padding: "1.5rem", border: "1px solid var(--border)" }}>
+              <SectionTitle title="发货城市分布 TOP10" icon={Target} />
+              <div style={{ height: 280, marginTop: "1rem" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={(() => {
+                    const cityMap: Record<string, number> = {};
+                    data.forEach(v => { const c = v.ship_from_city || v.shop_city || "未知"; cityMap[c] = (cityMap[c] || 0) + 1; });
+                    return Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }));
+                  })()} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#334155" opacity={0.3} />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: "#e2e8f0", fontSize: 12 }} width={80} />
+                    <RechartsTooltip content={<ChartTooltip />} />
+                    <Bar dataKey="value" name="违规数" radius={[0, 6, 6, 0]} barSize={18} fill="#8b5cf6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Price Gap Histogram */}
+            <div className="card" style={{ padding: "1.5rem", border: "1px solid var(--border)" }}>
+              <SectionTitle title="价格差额区间分布" icon={TrendingDown} />
+              <div style={{ height: 280, marginTop: "1rem" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={(() => {
+                    const bins = [
+                      { name: "5-10%", min: 0.05, max: 0.10, count: 0 },
+                      { name: "10-15%", min: 0.10, max: 0.15, count: 0 },
+                      { name: "15-20%", min: 0.15, max: 0.20, count: 0 },
+                      { name: "20-30%", min: 0.20, max: 0.30, count: 0 },
+                      { name: "30-50%", min: 0.30, max: 0.50, count: 0 },
+                      { name: ">50%", min: 0.50, max: 100, count: 0 },
+                    ];
+                    data.forEach(v => {
+                      const gap = Math.abs(v.gap_percent || 0);
+                      for (const b of bins) { if (gap >= b.min && gap < b.max) { b.count++; break; } }
+                    });
+                    return bins.map(b => ({ name: b.name, value: b.count }));
+                  })()} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.4} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                    <RechartsTooltip content={<ChartTooltip />} />
+                    <Bar dataKey="value" name="违规数量" radius={[6, 6, 0, 0]} barSize={36}>
+                      {[0,1,2,3,4,5].map(i => (
+                        <Cell key={i} fill={["#22c55e","#eab308","#f97316","#ef4444","#dc2626","#991b1b"][i]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>
