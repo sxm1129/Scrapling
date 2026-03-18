@@ -102,6 +102,9 @@ export const api = {
   toggleKeyword: (id: number, enabled: boolean) =>
     fetchAPI(`/api/keywords/${id}`, { method: 'PUT', body: JSON.stringify({ enabled }) }),
   deleteKeyword: (id: number) => fetchAPI(`/api/keywords/${id}`, { method: 'DELETE' }),
+  batchAddKeywords: (keywords: string[]) =>
+    fetchAPI('/api/keywords/batch', { method: 'POST', body: JSON.stringify({ keywords }) }),
+  exportKeywordsUrl: '/api/keywords/export',
 
   // Whitelist
   getWhitelist: () => fetchAPI('/api/whitelist'),

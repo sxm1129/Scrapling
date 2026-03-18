@@ -263,6 +263,44 @@ def delete_keyword(keyword_id: int, db: Session = Depends(get_db), _=Depends(req
     return {"ok": True}
 
 
+@app.post("/api/keywords/batch")
+def batch_add_keywords(data: dict, db: Session = Depends(get_db), _=Depends(require_auth)):
+    """Batch import keywords from a list of strings."""
+    keywords = data.get("keywords", [])
+    if not isinstance(keywords, list) or len(keywords) == 0:
+        raise HTTPException(400, "keywords must be a non-empty list")
+    added = 0
+    for kw_str in keywords[:500]:  # cap at 500
+        kw_str = str(kw_str).strip()
+        if not kw_str or len(kw_str) > 100:
+            continue
+        existing = db.query(SearchKeyword).filter(SearchKeyword.keyword == kw_str).first()
+        if existing:
+            continue
+        crud.add_keyword(db, kw_str, 0)
+        added += 1
+    db.commit()
+    return {"added": added, "total": db.query(SearchKeyword).count()}
+
+
+@app.get("/api/keywords/export")
+def export_keywords(db: Session = Depends(get_db)):
+    """Export all keywords as CSV."""
+    from fastapi.responses import StreamingResponse
+    import io
+    items = db.query(SearchKeyword).order_by(SearchKeyword.id).all()
+    output = io.StringIO()
+    output.write("keyword,priority,enabled\n")
+    for k in items:
+        output.write(f"{k.keyword},{k.priority},{k.enabled}\n")
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=keywords.csv"}
+    )
+
+
 # ── Whitelist ──
 
 @app.get("/api/whitelist")

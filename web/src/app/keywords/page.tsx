@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api, handleError } from "@/lib/api";
 
 export default function KeywordsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [newKw, setNewKw] = useState("");
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => api.getKeywords().then((r: any) => setItems(r.items || [])).catch(console.error);
   useEffect(() => { load(); }, []);
@@ -33,9 +35,57 @@ export default function KeywordsPage() {
     } catch (e) { handleError(e, "删除关键词"); }
   };
 
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
+      // Skip header if it looks like one
+      const keywords = lines[0]?.toLowerCase().includes("keyword") ? lines.slice(1) : lines;
+      // Extract first column if CSV
+      const cleaned = keywords.map(k => k.split(",")[0].trim()).filter(k => k && k.length <= 100);
+      if (cleaned.length === 0) {
+        alert("CSV 文件中没有找到有效的关键词");
+        return;
+      }
+      const result = await api.batchAddKeywords(cleaned);
+      alert(`导入成功：新增 ${result.added} 个关键词（去重后），当前共 ${result.total} 个`);
+      load();
+    } catch (err) {
+      handleError(err, "CSV 导入");
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleExport = () => {
+    window.open(api.exportKeywordsUrl, "_blank");
+  };
+
   return (
     <div className="animate-in">
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>关键词管理</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>关键词管理</h1>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button className="btn btn-ghost" onClick={handleExport} style={{ fontSize: "0.8rem" }}>
+            📥 导出 CSV
+          </button>
+          <label className="btn btn-ghost" style={{ fontSize: "0.8rem", cursor: "pointer" }}>
+            📤 {importing ? "导入中..." : "导入 CSV"}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,.txt"
+              style={{ display: "none" }}
+              onChange={handleCSVUpload}
+              disabled={importing}
+            />
+          </label>
+        </div>
+      </div>
 
       {/* Add Form */}
       <div className="card" style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginBottom: "1rem" }}>
@@ -73,9 +123,15 @@ export default function KeywordsPage() {
           <div style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.4 }}>🔍</div>
           <p style={{ color: "var(--text-muted)", marginBottom: "1rem", fontSize: "0.95rem" }}>还没有添加任何关键词</p>
           <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "1.5rem" }}>添加关键词后，系统将自动在各电商平台搜索并监测价格</p>
-          <button className="btn btn-primary" onClick={() => document.querySelector<HTMLInputElement>('.input')?.focus()}>
-            立即添加关键词
-          </button>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+            <button className="btn btn-primary" onClick={() => document.querySelector<HTMLInputElement>('.input')?.focus()}>
+              手动添加
+            </button>
+            <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
+              📤 从 CSV 批量导入
+              <input type="file" accept=".csv,.txt" style={{ display: "none" }} onChange={handleCSVUpload} />
+            </label>
+          </div>
         </div>
       )}
     </div>
