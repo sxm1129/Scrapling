@@ -32,37 +32,47 @@ def match_responsibility(
     """
     按优先级匹配责任规则：
     1. platform + shop_name_pattern + city (最精准)
-    2. platform + shop_name_pattern
-    3. platform + city
-    4. 任意规则兜底（city 或 shop）
-    返回最高优先级匹配的规则，否则返回 None
+    2. platform + shop_name_pattern (店铺兜底)
+    3. platform + city (区域兜底，即shop_name_pattern为空)
+    4. 全网兜底池（仅平台，或全限定为空）
     """
-    rules = crud.list_responsibility_rules(session, platform=platform, active_only=True)
+    rules = crud.list_responsibility_rules(session, platform=None, active_only=True)
     best: Optional[ResponsibilityRule] = None
     best_score = -1
 
     for rule in rules:
         score = 0
-        # 平台匹配
+        
+        # 匹配平台，若不一致直接跳过，若不限平台则不加分
         if rule.platform and rule.platform != platform:
             continue
         if rule.platform == platform:
             score += 4
 
-        # 店铺名匹配
-        if rule.shop_name_pattern and shop_name:
+        # 匹配店铺名
+        if rule.shop_name_pattern:
+            if not shop_name:
+                continue # 规则要求了店铺，但当前商品无店铺 -> 无法匹配
             keywords = rule.shop_name_pattern.lower().split()
             if all(kw in shop_name.lower() for kw in keywords):
-                score += 2
+                score += 5
             else:
-                continue  # 有 pattern 但不匹配 → 跳过
+                continue # 有pattern但不匹配 -> 跳过
+        else:
+            # 规则中没有配置店铺名，属于兜底规则
+            score += 1 
 
-        # 城市匹配
-        if rule.ship_from_city and ship_from_city:
+        # 匹配城市
+        if rule.ship_from_city:
+            if not ship_from_city:
+                continue # 规则要求了城市，但当前商品无城市 -> 无法匹配
             if rule.ship_from_city == ship_from_city:
-                score += 1
+                score += 3
             else:
-                continue  # 有城市约束但不匹配 → 跳过
+                continue # 有城市约束但不匹配 -> 跳过
+        else:
+            # 规则中没有配置城市，属于更泛化的兜底
+            score += 1
 
         # 用优先级加权
         score += rule.priority * 10

@@ -249,3 +249,17 @@ class PeriodicReport(Base):
     pushed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="推送到飞书时间")
     triggered_by: Mapped[str] = mapped_column(String(50), default="scheduler")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ReportSchedule(Base):
+    """定时报表投递配置"""
+    __tablename__ = "report_schedules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, comment="任务名称")
+    cron_expression: Mapped[str] = mapped_column(String(100), nullable=False, comment="例如: 0 9 * * 1 (每周一9点)")
+    report_type: Mapped[str] = mapped_column(String(20), default="WEEKLY", comment="WEEKLY|MONTHLY|DAILY")
+    webhook_url: Mapped[str] = mapped_column(String(500), nullable=False, comment="飞书等 Webhook")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

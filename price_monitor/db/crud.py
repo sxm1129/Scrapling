@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 from price_monitor.db.models import (
     OfferSnapshot, Violation, BaselinePrice,
     SearchKeyword, WhitelistRule, CookieAccount, ScrapeJob,
-    WorkOrder, ResponsibilityRule, PeriodicReport,
+    WorkOrder, ResponsibilityRule, PeriodicReport, ReportSchedule,
+    O2OStockLink
 )
 
 
@@ -512,3 +513,67 @@ def list_periodic_reports(session: Session, page: int = 1, page_size: int = 20) 
     total = q.count()
     items = q.offset((page - 1) * page_size).limit(page_size).all()
     return items, total
+
+# ── ReportSchedule ──
+
+def create_report_schedule(session: Session, data: dict) -> ReportSchedule:
+    schedule = ReportSchedule(**data)
+    session.add(schedule)
+    session.flush()
+    return schedule
+
+def list_report_schedules(
+    session: Session,
+    page: int = 1,
+    page_size: int = 50,
+) -> tuple[list[ReportSchedule], int]:
+    q = session.query(ReportSchedule).order_by(ReportSchedule.id.desc())
+    total = q.count()
+    items = q.offset((page - 1) * page_size).limit(page_size).all()
+    return items, total
+
+def delete_report_schedule(session: Session, schedule_id: int) -> bool:
+    schedule = session.query(ReportSchedule).filter_by(id=schedule_id).first()
+    if schedule:
+        session.delete(schedule)
+        session.flush()
+        return True
+    return False
+
+def toggle_report_schedule(session: Session, schedule_id: int, is_active: bool) -> bool:
+    schedule = session.query(ReportSchedule).filter_by(id=schedule_id).first()
+    if schedule:
+        schedule.is_active = is_active
+        session.flush()
+        return True
+    return False
+
+
+# ── O2OStockLink ──
+
+def create_o2o_link(session: Session, data: dict) -> O2OStockLink:
+    link = O2OStockLink(**data)
+    session.add(link)
+    session.flush()
+    return link
+
+def list_active_o2o_links(session: Session, platform: Optional[str] = None) -> list[O2OStockLink]:
+    q = session.query(O2OStockLink).filter_by(is_active=True)
+    if platform:
+        q = q.filter_by(platform=platform)
+    return q.all()
+
+def delete_o2o_link(session: Session, link_id: int) -> bool:
+    link = session.query(O2OStockLink).filter_by(id=link_id).first()
+    if link:
+        session.delete(link)
+        session.flush()
+        return True
+    return False
+
+# ── ResponsibilityRule (Extended) ──
+def create_responsibility_rule(session: Session, data: dict) -> ResponsibilityRule:
+    rule = ResponsibilityRule(**data)
+    session.add(rule)
+    session.flush()
+    return rule

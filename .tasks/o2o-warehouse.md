@@ -59,3 +59,13 @@
 - [x] Identify if search endpoints exist and what mandatory city/location parameters are needed.
 - [x] *Fallback*: If endpoints are completely absent/encrypted and cannot be easily spoofed via Web H5, switch to strategy B (Single URL monitoring).
   - *Conclusion: App-only ecosystem. No public `search` H5 pages exist. `m.ddxq.mobi` DNS is dead, Pupu API requires native App token signing. We must officially fallback to Strategy B (Single URL Monitoring) for these 3 platforms, relying solely on `scrape_product()`.*
+
+#### 4: P3 O2O Grid List and Knowledge Base Fallback
+- [x] Define `O2OStockLink` in `price_monitor/db/models.py`.
+- [x] Add `create_o2o_link` and `list_active_o2o_links` to `price_monitor/db/crud.py`.
+- [x] Add `create_responsibility_rule` to `price_monitor/db/crud.py`.
+- [x] Refactor `workorder_engine.py:match_responsibility()` to safely handle City-only and Global-only fallback scoring.
+- [x] Add `start_o2o_scan` to `CollectionManager`.
+- [x] Add Pydantic schemas in `app.py` for `O2OStockLink` and `AttributionConfirmCreate`.
+- [x] Implement endpoints: `POST/GET /api/o2o/links`.
+- [x] Implement endpoint: `POST /api/workorders/{id}/confirm-attribution`.

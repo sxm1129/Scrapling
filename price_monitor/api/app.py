@@ -22,6 +22,7 @@ from price_monitor.db import crud
 from price_monitor.db.models import (
     OfferSnapshot, Violation, BaselinePrice,
     SearchKeyword, WhitelistRule, CookieAccount,
+    ReportSchedule, O2OStockLink, ResponsibilityRule, WorkOrder
 )
 
 log = logging.getLogger(__name__)
@@ -54,6 +55,30 @@ class CookieSave(BaseModel):
     account_id: str = Field(..., min_length=1)
     cookies: list
 
+class ScheduleCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    cron_expression: str = Field(..., min_length=5, max_length=100)
+    report_type: str = Field(default="WEEKLY", pattern="^(DAILY|WEEKLY|MONTHLY|CUSTOM)$")
+    webhook_url: str = Field(..., min_length=10, max_length=500)
+    is_active: bool = True
+
+class ScheduleUpdate(BaseModel):
+    is_active: bool
+
+class O2OStockLinkCreate(BaseModel):
+    platform: str = Field(..., min_length=1, max_length=20)
+    product_url: str = Field(..., min_length=10, max_length=500)
+    product_name: Optional[str] = None
+    city_context: Optional[dict] = None
+
+class AttributionConfirmCreate(BaseModel):
+    dealer_name: str = Field(..., min_length=1, max_length=100)
+    owner_user_id: str = Field(..., min_length=1, max_length=100)
+    owner_name: str = Field(..., min_length=1, max_length=100)
+    platform: Optional[str] = None
+    shop_name: Optional[str] = None
+    ship_from_city: Optional[str] = None
+    note: Optional[str] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -136,6 +161,47 @@ from price_monitor.api.auth import require_auth
 def get_dashboard(db: Session = Depends(get_db)):
     stats = crud.get_dashboard_stats(db)
     return stats
+
+# ── Global Search ──
+
+@app.get("/api/search")
+def global_search(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    results = []
+    
+    # 1. Search Keywords
+    keywords = db.query(SearchKeyword).filter(SearchKeyword.keyword.ilike(f"%{q}%")).limit(5).all()
+    for k in keywords:
+        results.append({
+            "type": "关键词", "title": k.keyword,
+            "description": f"优先级: {'高' if k.priority else '普通'} | 状态: {'启用' if k.enabled else '禁用'}",
+            "url": "/keywords"
+        })
+        
+    # 2. Search Violations
+    violations = db.query(Violation).filter(
+        (Violation.product_name.ilike(f"%{q}%")) | (Violation.shop_name.ilike(f"%{q}%"))
+    ).order_by(Violation.created_at.desc()).limit(10).all()
+    for v in violations:
+        results.append({
+            "type": "违规记录", "title": v.product_name or "未知商品",
+            "description": f"店铺: {v.shop_name} | 平台: {v.platform} | 价格: ¥{v.final_price}",
+            "url": "/violations"
+        })
+        
+    # 3. Search Offers (if not already matched heavily by violations)
+    if len(results) < 15:
+        offers = db.query(OfferSnapshot).filter(
+            (OfferSnapshot.product_name.ilike(f"%{q}%")) | (OfferSnapshot.shop_name.ilike(f"%{q}%"))
+        ).order_by(OfferSnapshot.created_at.desc()).limit(10).all()
+        for o in offers:
+            results.append({
+                "type": "采集数据", "title": o.product_name or "未知商品",
+                "description": f"店铺: {o.shop_name} | 平台: {o.platform} | 价格: ¥{o.final_price}",
+                "url": "/offers"
+            })
+            
+    # Deduplicate slightly by title if needed, or just return top 20
+    return {"items": results[:20]}
 
 
 # ── Offers ──
@@ -326,6 +392,41 @@ def revoke_whitelist(rule_id: int, db: Session = Depends(get_db), _=Depends(requ
     return {"ok": True}
 
 
+@app.post("/api/whitelist/batch-approve")
+def batch_approve_whitelist(data: dict, db: Session = Depends(get_db), _=Depends(require_auth)):
+    ids = data.get("ids", [])
+    if not isinstance(ids, list) or not ids:
+        raise HTTPException(400, "ids must be a non-empty list")
+    
+    rules = db.query(WhitelistRule).filter(WhitelistRule.id.in_(ids)).all()
+    count = 0
+    for r in rules:
+        if r.status != "ACTIVE":
+            r.status = "ACTIVE"
+            count += 1
+    db.commit()
+    return {"updated": count}
+
+
+@app.post("/api/whitelist/batch-revoke")
+def batch_revoke_whitelist(data: dict, db: Session = Depends(get_db), _=Depends(require_auth)):
+    ids = data.get("ids", [])
+    reason = data.get("reason")
+    if not isinstance(ids, list) or not ids:
+        raise HTTPException(400, "ids must be a non-empty list")
+    
+    rules = db.query(WhitelistRule).filter(WhitelistRule.id.in_(ids)).all()
+    count = 0
+    for r in rules:
+        if r.status != "REVOKED":
+            r.status = "REVOKED"
+            if reason:
+                r.reason = reason
+            count += 1
+    db.commit()
+    return {"updated": count}
+
+
 # ── Cookies ──
 
 @app.get("/api/cookies")
@@ -472,3 +573,133 @@ def _cookie_to_dict(c: CookieAccount) -> dict:
         "expired_at": c.expired_at.isoformat() + "Z" if c.expired_at else None,
         "created_at": c.created_at.isoformat() + "Z" if c.created_at else None,
     }
+
+
+def _schedule_to_dict(s: ReportSchedule) -> dict:
+    return {
+        "id": s.id,
+        "name": s.name,
+        "cron_expression": s.cron_expression,
+        "report_type": s.report_type,
+        "webhook_url": s.webhook_url,
+        "is_active": s.is_active,
+        "created_at": s.created_at.isoformat() + "Z" if s.created_at else None,
+        "updated_at": s.updated_at.isoformat() + "Z" if s.updated_at else None,
+    }
+
+def _o2o_link_to_dict(link: O2OStockLink) -> dict:
+    return {
+        "id": link.id,
+        "platform": link.platform,
+        "product_url": link.product_url,
+        "product_name": link.product_name,
+        "city_context": link.city_context,
+        "is_active": link.is_active,
+    }
+
+
+# ── Schedules ──
+
+@app.get("/api/schedules")
+def list_schedules(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _=Depends(require_auth),
+):
+    items, total = crud.list_report_schedules(db, page=page, page_size=page_size)
+    return {
+        "items": [_schedule_to_dict(i) for i in items],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+@app.post("/api/schedules")
+def create_schedule(data: ScheduleCreate, db: Session = Depends(get_db), _=Depends(require_auth)):
+    s = crud.create_report_schedule(db, data.model_dump())
+    db.commit()
+    return _schedule_to_dict(s)
+
+@app.put("/api/schedules/{schedule_id}")
+def update_schedule(schedule_id: int, data: ScheduleUpdate, db: Session = Depends(get_db), _=Depends(require_auth)):
+    success = crud.toggle_report_schedule(db, schedule_id, data.is_active)
+    if not success:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    db.commit()
+    return {"status": "ok"}
+
+@app.delete("/api/schedules/{schedule_id}")
+def delete_schedule(schedule_id: int, db: Session = Depends(get_db), _=Depends(require_auth)):
+    success = crud.delete_report_schedule(db, schedule_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    db.commit()
+    return {"status": "ok"}
+
+
+# ── O2O Stock Links ──
+
+@app.get("/api/o2o/links")
+def list_o2o_links(platform: Optional[str] = None, db: Session = Depends(get_db), _=Depends(require_auth)):
+    links = crud.list_active_o2o_links(db, platform=platform)
+    return {"items": [_o2o_link_to_dict(link) for link in links]}
+
+@app.post("/api/o2o/links")
+def create_o2o_link(data: O2OStockLinkCreate, db: Session = Depends(get_db), _=Depends(require_auth)):
+    link = crud.create_o2o_link(db, data.model_dump())
+    db.commit()
+    return _o2o_link_to_dict(link)
+
+@app.delete("/api/o2o/links/{link_id}")
+def delete_o2o_link(link_id: int, db: Session = Depends(get_db), _=Depends(require_auth)):
+    if crud.delete_o2o_link(db, link_id):
+        db.commit()
+        return {"status": "ok"}
+    raise HTTPException(status_code=404, detail="O2O link not found")
+
+
+# ── Attribution & WorkOrders ──
+
+@app.post("/api/workorders/{wo_id}/confirm-attribution")
+def confirm_attribution(wo_id: int, data: AttributionConfirmCreate, db: Session = Depends(get_db), _=Depends(require_auth)):
+    wo = db.query(WorkOrder).filter_by(id=wo_id).first()
+    if not wo:
+        raise HTTPException(status_code=404, detail="WorkOrder not found")
+    
+    # 1. Backwrite mapping to knowledge base (ResponsibilityRule)
+    req = data.model_dump()
+    db_data = {
+        "platform": req.get("platform") or wo.platform,
+        "shop_name_pattern": req.get("shop_name", "").strip() or None,
+        "ship_from_city": req.get("ship_from_city", "").strip() or None,
+        "dealer_name": req.get("dealer_name"),
+        "owner_user_id": req.get("owner_user_id"),
+        "owner_name": req.get("owner_name"),
+        "priority": 100,  # Manual confirmations gain high priority
+        "note": req.get("note", f"Manually confirmed from WO #{wo.id}")
+    }
+    crud.create_responsibility_rule(db, db_data)
+
+    # 2. Update the WO itself and insert action log
+    from price_monitor.engine.workorder_engine import append_action
+    wo.owner_user_id = db_data["owner_user_id"]
+    wo.owner_name = db_data["owner_name"]
+    wo.dealer_name = db_data["dealer_name"]
+    if wo.status == "OPEN":
+        wo.status = "IN_PROGRESS"
+    
+    append_action(
+        session=db,
+        wo_id=wo_id,
+        action_type="CONFIRM_ATTRIBUTION",
+        note=f"Confirmed dealer: {db_data['dealer_name']} ({db_data['owner_name']})",
+        operator="user"
+    )
+
+    db.commit()
+    return {"status": "ok", "message": "Attribution confirmed and rule created"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("price_monitor.api.app:app", host="0.0.0.0", port=8000, reload=True)

@@ -128,6 +128,31 @@ class CollectionManager:
         asyncio.ensure_future(self._run_single_scrape(job_id, platform, url))
         return job
 
+    async def start_o2o_scan(
+        self,
+        platform: str = None,
+        triggered_by: str = "manual",
+    ) -> ScrapeJob:
+        """启动 O2O 网格全量扫描"""
+        factory = get_session_factory()
+        session = factory()
+        try:
+            job = crud.create_job(session, {
+                "job_type": "O2O_SCAN",
+                "platform": platform,
+                "triggered_by": triggered_by,
+                "status": "PENDING",
+            })
+            session.commit()
+            session.refresh(job)
+            job_id = job.id
+            session.expunge(job)
+        finally:
+            session.close()
+
+        asyncio.ensure_future(self._run_o2o_scan(job_id, platform))
+        return job
+
     @staticmethod
     def cancel_job(job_id: int) -> bool:
         """取消运行中任务"""
@@ -183,6 +208,106 @@ class CollectionManager:
             session.close()
 
     # ── Internal execution ──
+
+    async def _run_o2o_scan(self, job_id: int, platform: str = None):
+        """执行 O2O 专属分享链接扫描"""
+        from price_monitor.db.models import O2OStockLink
+        factory = get_session_factory()
+        _active_jobs[job_id] = False
+        start_time = time.time()
+
+        with factory() as session:
+            try:
+                crud.update_job_status(session, job_id, "RUNNING", started_at=datetime.utcnow())
+                session.commit()
+                links = crud.list_active_o2o_links(session, platform=platform)
+                if not links:
+                    crud.update_job_status(session, job_id, "SUCCESS", finished_at=datetime.utcnow(), error_message="No active O2O links found")
+                    session.commit()
+                    return
+                # detach objects
+                for link in links:
+                    session.expunge(link)
+            except Exception as e:
+                log.error(f"[Job:{job_id}] Init failed: {e}")
+                return
+
+        total_steps = len(links)
+        step = 0
+        total_offers = 0
+        total_violations = 0
+        total_fails = 0
+
+        try:
+            for link in links:
+                plat = link.platform
+                url = link.product_url
+                city_ctx = link.city_context or {}
+
+                with factory() as session:
+                    job_record = crud.get_job(session, job_id)
+                    if _active_jobs.get(job_id) or (job_record and job_record.status == "CANCELLED"):
+                        raise asyncio.CancelledError("Job cancelled by user")
+
+                step += 1
+                progress = int(step / total_steps * 100)
+                
+                try:
+                    # 单 URL 抓取复用现存的 StealthyFetcher scrape_product 接口
+                    task = ScrapeTask(
+                        keyword=link.product_name or "O2O Link",
+                        product_id=str(link.id),
+                        product_url=url,
+                    )
+                    scraper_class = create_scraper(plat)
+                    scraper = scraper_class()
+                    # 模拟单次爬取（O2O一般就是单品页面）
+                    price_obj = await scraper.scrape_product(task)
+                    offers = [price_obj] if price_obj else []
+                except Exception as e:
+                    total_fails += 1
+                    offers = []
+                    log.error(f"  [{plat}] Scrape failed for {url}: {e}")
+
+                # 接下来正常处理这批 offer
+                with factory() as session:
+                    # Inject city context so process_offers properly attributes it
+                    valid_offers = []
+                    for o in offers:
+                        o.city_context = city_ctx
+                        o.raw_price = o.price
+                        valid_offers.append(o)
+
+                    v_cnt, success_cnt, _, p0, p1 = process_offers(session, plat, job_id, valid_offers)
+                    total_offers += success_cnt
+                    total_violations += v_cnt
+                    crud.update_job_status(
+                        session, job_id, "RUNNING", progress=progress,
+                        total_items=total_steps, success_items=total_offers, fail_items=total_fails,
+                        violations_found=total_violations
+                    )
+                    session.commit()
+
+            # End logic
+            duration = time.time() - start_time
+            with factory() as session:
+                crud.update_job_status(
+                    session, job_id, "SUCCESS", progress=100, finished_at=datetime.utcnow(),
+                )
+                session.commit()
+            log.info(f"O2O Scan completed. Dur={int(duration)}s, total={total_offers}, fail={total_fails}")
+            notify_scan_summary(job_id, "O2O_SCAN", 0, duration, total_offers, total_violations)
+
+        except asyncio.CancelledError:
+            with factory() as session:
+                crud.update_job_status(session, job_id, "CANCELLED", finished_at=datetime.utcnow())
+                session.commit()
+        except Exception as e:
+            with factory() as session:
+                crud.update_job_status(session, job_id, "FAILED", error_message=str(e), finished_at=datetime.utcnow())
+                session.commit()
+        finally:
+            _active_jobs.pop(job_id, None)
 
     async def _run_full_scan(self, job_id: int, keyword: str = None):
         """执行全量扫描"""
