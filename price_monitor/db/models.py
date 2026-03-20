@@ -90,9 +90,33 @@ class BaselinePrice(Base):
     product_pattern: Mapped[str] = mapped_column(String(200), nullable=False, comment="商品名匹配模式")
     sku_name: Mapped[Optional[str]] = mapped_column(String(200), comment="SKU 显示名称")
     baseline_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    # per-SKU 容忍阈值，None 表示使用全局默认 (P1=15%, P0=30%)
+    tolerance_percent: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4), comment="违规阈值，覆盖全局配置")
+    # 渠道标识：ONLINE_DIRECT / DEALER / O2O
+    channel: Mapped[str] = mapped_column(String(20), default="ONLINE_DIRECT", comment="适用渠道")
     note: Mapped[Optional[str]] = mapped_column(String(300))
     updated_by: Mapped[Optional[str]] = mapped_column(String(50))
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # 关联历史记录
+    history: Mapped[list["BaselinePriceHistory"]] = relationship(back_populates="baseline", cascade="all, delete-orphan")
+
+
+class BaselinePriceHistory(Base):
+    """基准价变更历史 — 记录每次调价操作"""
+    __tablename__ = "baseline_price_history"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    baseline_id: Mapped[int] = mapped_column(Integer, ForeignKey("baseline_prices.id"), nullable=False, index=True)
+    old_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    new_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    old_tolerance: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4))
+    new_tolerance: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4))
+    changed_by: Mapped[Optional[str]] = mapped_column(String(50))
+    reason: Mapped[Optional[str]] = mapped_column(String(300))
+    changed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    baseline: Mapped["BaselinePrice"] = relationship(back_populates="history")
 
 
 class SearchKeyword(Base):
@@ -103,6 +127,10 @@ class SearchKeyword(Base):
     keyword: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     priority: Mapped[int] = mapped_column(Integer, default=0, comment="0=普通, 1=重点")
+    # 动态调度字段
+    scan_interval_minutes: Mapped[int] = mapped_column(Integer, default=60, comment="采集间隔(分钟)")
+    last_scan_at: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="最近一次采集时间")
+    next_scan_at: Mapped[Optional[datetime]] = mapped_column(DateTime, index=True, comment="下次计划采集时间")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -159,6 +187,8 @@ class ScrapeJob(Base):
     success_items: Mapped[int] = mapped_column(Integer, default=0)
     fail_items: Mapped[int] = mapped_column(Integer, default=0)
     violations_found: Mapped[int] = mapped_column(Integer, default=0)
+    # 结构化失败原因枚举: COOKIE_EXPIRED | RISK_CONTROL | SELECTOR_MISS | TIMEOUT | UNKNOWN
+    fail_reason_code: Mapped[Optional[str]] = mapped_column(String(30), index=True, comment="失败原因分类")
     error_message: Mapped[Optional[str]] = mapped_column(Text)
     triggered_by: Mapped[str] = mapped_column(
         String(20), default="manual", comment="scheduler | manual | api"

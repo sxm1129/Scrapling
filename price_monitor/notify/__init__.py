@@ -87,42 +87,71 @@ def _post_webhook(url: str, payload: dict) -> bool:
     return False
 
 
-def notify_violation(violation) -> bool:
-    """推送违规告警到飞书"""
+def notify_violation(violation, workorder_id: int = None) -> bool:
+    """推送违规告警到飞书（卡片带操作按鈕）"""
     severity = violation.severity
     icon = "🚨" if severity == "P0" else "⚠️"
     gap_pct = float(violation.gap_percent) * 100
 
     title = f"{icon} 低价预警 [{severity}]"
 
+    content_md = (
+        f"**平台**: {violation.platform}  |  **店铺**: {violation.shop_name or '未知'}\n"
+        f"**商品**: {(violation.product_name or '')[:60]}\n"
+        f"**基准价**: ¥{violation.baseline_price}  \u2192  **到手价**: ¥{violation.final_price}\n"
+        f"**差额**: -{gap_pct:.1f}% (¥{violation.gap_value})\n"
+        f"**发货城市**: {violation.ship_from_city or '未知'}"
+    )
+    if workorder_id:
+        content_md += f"  |  **工单**: #{workorder_id}"
+
     elements = [
         {
             "tag": "div",
-            "text": {
-                "tag": "lark_md",
-                "content": (
-                    f"**平台**: {violation.platform}  |  **店铺**: {violation.shop_name or '未知'}\n"
-                    f"**商品**: {(violation.product_name or '')[:60]}\n"
-                    f"**基准价**: ¥{violation.baseline_price}  →  **到手价**: ¥{violation.final_price}\n"
-                    f"**差额**: -{gap_pct:.1f}% (¥{violation.gap_value})\n"
-                    f"**发货城市**: {violation.ship_from_city or '未知'}"
-                ),
-            },
+            "text": {"tag": "lark_md", "content": content_md},
         },
     ]
 
+    # 商品链接按鈕
+    action_buttons = []
     if violation.canonical_url:
-        elements.append({
-            "tag": "action",
-            "actions": [
-                {
-                    "tag": "button",
-                    "text": {"tag": "plain_text", "content": "查看商品链接"},
-                    "url": violation.canonical_url,
-                    "type": "primary",
-                },
-            ],
+        action_buttons.append({
+            "tag": "button",
+            "text": {"tag": "plain_text", "content": "查看商品"},
+            "url": violation.canonical_url,
+            "type": "default",
         })
+
+    # 工单操作按鈕（双向回调必须有 workorder_id）
+    if workorder_id:
+        action_buttons.extend([
+            {
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": "✅ 已处理"},
+                "type": "primary",
+                "value": {"action": "resolved", "workorder_id": workorder_id},
+            },
+            {
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": "⏫ 升级P0"},
+                "type": "danger",
+                "value": {"action": "escalate_p0", "workorder_id": workorder_id},
+            },
+            {
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": "🟢 加白名单"},
+                "type": "default",
+                "value": {
+                    "action": "whitelist",
+                    "workorder_id": workorder_id,
+                    "shop_name": violation.shop_name or "",
+                    "platform": violation.platform,
+                },
+            },
+        ])
+
+    if action_buttons:
+        elements.append({"tag": "action", "actions": action_buttons})
 
     return send_rich_card(title, elements)
 

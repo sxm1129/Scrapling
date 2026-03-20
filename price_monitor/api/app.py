@@ -34,7 +34,10 @@ class BaselineCreate(BaseModel):
     product_pattern: str = Field(..., min_length=1, max_length=200)
     sku_name: Optional[str] = None
     baseline_price: float = Field(..., gt=0)
+    tolerance_percent: Optional[float] = Field(None, ge=0.01, le=0.99, description="违规阈值(0.15=15%), 覆盖全局默认")
+    channel: str = Field(default="ONLINE_DIRECT", pattern="^(ONLINE_DIRECT|DEALER|O2O)$")
     note: Optional[str] = None
+    updated_by: Optional[str] = None
 
 class KeywordCreate(BaseModel):
     keyword: str = Field(..., min_length=1, max_length=100)
@@ -141,6 +144,9 @@ app.include_router(workorder_router)
 from price_monitor.api.reporting_api import router as reporting_router
 app.include_router(reporting_router)
 
+# 飞书双向回调路由 (A2)
+from price_monitor.api.feishu_callback import router as feishu_router
+app.include_router(feishu_router)
 
 # ── 全局异常处理 ──
 
@@ -205,6 +211,18 @@ def global_search(q: str = Query(..., min_length=1), db: Session = Depends(get_d
 
 
 # ── Offers ──
+
+@app.get("/api/offers/trend")
+def get_offers_trend(
+    keyword: str = None,
+    platform: str = None,
+    days: int = Query(7, ge=1, le=90),
+    db: Session = Depends(get_db),
+):
+    """GET 价格趋势数据（按天聚合）"""
+    data = crud.get_price_trend(db, keyword=keyword, platform=platform, days=days)
+    return {"trend": data, "days": days, "keyword": keyword, "platform": platform}
+
 
 @app.get("/api/offers")
 def list_offers(
@@ -293,6 +311,15 @@ def delete_baseline(baseline_id: int, db: Session = Depends(get_db), _=Depends(r
         raise HTTPException(404, "Baseline not found")
     db.commit()
     return {"ok": True}
+
+
+@app.get("/api/baselines/{baseline_id}/history")
+def get_baseline_history_api(baseline_id: int, db: Session = Depends(get_db)):
+    """GET 基准价变更历史"""
+    bp = db.query(BaselinePrice).filter(BaselinePrice.id == baseline_id).first()
+    if not bp:
+        raise HTTPException(404, "Baseline not found")
+    return {"baseline_id": baseline_id, "history": crud.get_baseline_history(db, baseline_id)}
 
 
 # ── Keywords ──
@@ -466,6 +493,17 @@ def export_violations(
         "exported": len(items),
         "capped": len(items) < total,
     }
+
+
+# ── 采集健康统计 ──
+
+@app.get("/api/collection/health-stats")
+def get_collection_health(
+    hours: int = Query(24, ge=1, le=168),
+    db: Session = Depends(get_db),
+):
+    """GET 采集健康指标（成功率/失败原因分布）"""
+    return crud.get_collection_health_stats(db, hours=hours)
 
 
 # ── 手动触发采集 (委托给 CollectionManager) ──

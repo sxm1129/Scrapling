@@ -38,7 +38,7 @@ LOGIN_URLS = {
     "tmall":         "https://login.taobao.com/",          # 天猫共用淘宝账号
     "taobao_flash":  "https://login.taobao.com/",
     "meituan_flash": "https://passport.meituan.com/account/unitivelogin",
-    "pinduoduo":     "https://www.pinduoduo.com/login.html",
+    "pinduoduo":     "https://mobile.yangkeduo.com/login.html",  # C 端消费者入口
 }
 
 # 各平台验证"已登录"的 URL/特征

@@ -95,3 +95,72 @@ def ensure_screenshot_dir(base_dir: str = None) -> Path:
     daily_dir = path / today
     daily_dir.mkdir(exist_ok=True)
     return daily_dir
+
+def pack_evidence(
+    offer_id: int,
+    screenshot_path: Optional[str],
+    page_text: Optional[str] = None,
+    canonical_url: str = "",
+    platform: str = "",
+) -> dict:
+    """
+    打包三合一证据包:
+      1. 截图 SHA256 哈希
+      2. 页面文本摘要 (innerText 前 300 字符)
+      3. UTC 时间戳
+
+    返回可序列化为 JSON 并嵌入到 OfferSnapshot.screenshot_hash 的证据包字典。
+    """
+    import json
+    import hmac as hmac_mod
+
+    # 1. 截图哈希
+    screenshot_hash = ""
+    if screenshot_path and Path(screenshot_path).exists():
+        screenshot_hash = compute_hash(screenshot_path)
+
+    # 2. 时间戳
+    timestamp_utc = datetime.utcnow().isoformat() + "Z"
+
+    # 3. 页面文本摘要
+    text_preview = (page_text or "")[:300].strip().replace("\n", " ")
+
+    # 4. 构建证据包
+    evidence = {
+        "offer_id": offer_id,
+        "platform": platform,
+        "canonical_url": canonical_url,
+        "screenshot_path": screenshot_path,
+        "screenshot_hash": screenshot_hash,
+        "page_text_preview": text_preview,
+        "captured_at_utc": timestamp_utc,
+        "version": "1.0",
+    }
+
+    # 5. 内容哈希签名（防篡改）
+    canonical = json.dumps(evidence, sort_keys=True, ensure_ascii=False)
+    content_sig = hashlib.sha256(canonical.encode()).hexdigest()
+    evidence["content_signature"] = f"sha256:{content_sig}"
+
+    log.info(
+        f"[evidence] Packed offer #{offer_id}: "
+        f"screenshot={screenshot_hash[:16]}..., sig={content_sig[:16]}..."
+    )
+    return evidence
+
+
+def verify_evidence(evidence: dict) -> bool:
+    """
+    校验证据包完整性。
+    返回 True = 未被篡改。
+    """
+    import json
+    import hmac as hmac_mod
+    stored_sig = evidence.get("content_signature", "")
+    if not stored_sig.startswith("sha256:"):
+        return False
+    stored_hash = stored_sig[7:]
+    check = {k: v for k, v in evidence.items() if k != "content_signature"}
+    canonical = json.dumps(check, sort_keys=True, ensure_ascii=False)
+    expected = hashlib.sha256(canonical.encode()).hexdigest()
+    return hmac_mod.compare_digest(expected, stored_hash)

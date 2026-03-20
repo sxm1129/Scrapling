@@ -10,14 +10,50 @@ const PLATFORM_LABELS: Record<string, string> = {
   community_group: "社区团购", pupu: "朴朴超市", xiaoxiang: "小象超市", dingdong: "叮咚买菜",
 };
 
+/* ─── Screenshot Preview Modal ─── */
+function ScreenshotModal({ path, onClose }: { path: string; onClose: () => void }) {
+  const imgSrc = path.startsWith("http") ? path : `/screenshots/${path.replace(/^.*\/screenshots\//, "")}`;
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "#0f172a",
+        border: "1px solid #1e293b",
+        borderRadius: 12,
+        padding: "1.5rem",
+        maxWidth: "90vw",
+        maxHeight: "90vh",
+        overflow: "auto",
+        position: "relative",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <h3 style={{ fontWeight: 600, fontSize: "0.9rem" }}>截图证据</h3>
+          <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={onClose}>✕</button>
+        </div>
+        <img
+          src={imgSrc}
+          alt="违规截图"
+          style={{ maxWidth: "80vw", maxHeight: "70vh", borderRadius: 8, display: "block" }}
+          onError={(e: any) => { e.target.src = ""; e.target.alt = "截图加载失败"; }}
+        />
+        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.75rem", wordBreak: "break-all" }}>
+          {path}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function ViolationsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ platform: "", severity: "" });
   const [selected, setSelected] = useState<any>(null);
-
+  const [screenshotPath, setScreenshotPath] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Batch selection
+  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
+  const [batchAction, setBatchAction] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -30,16 +66,50 @@ export default function ViolationsPage() {
     }).catch((e) => handleError(e, "加载违规列表")).finally(() => setLoading(false));
   }, [page, filters]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); setCheckedIds(new Set()); }, [load]);
 
   const totalPages = Math.ceil(total / 20);
+  const allChecked = items.length > 0 && items.every(v => checkedIds.has(v.id));
+
+  const toggleAll = () => {
+    if (allChecked) setCheckedIds(new Set());
+    else setCheckedIds(new Set(items.map(v => v.id)));
+  };
+
+  const toggleItem = (id: number) => {
+    const s = new Set(checkedIds);
+    s.has(id) ? s.delete(id) : s.add(id);
+    setCheckedIds(s);
+  };
+
+  const handleBatchOp = async () => {
+    if (checkedIds.size === 0) return;
+    const ids = [...checkedIds];
+    if (batchAction === "whitelist") {
+      const matched = items.filter(v => ids.includes(v.id));
+      for (const v of matched) {
+        if (!v.shop_name) continue;
+        await fetch("/api/whitelist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rule_type: "SHOP", match_pattern: v.shop_name, platform: v.platform, reason: "批量加白名单" }),
+        });
+      }
+      alert(`已将 ${ids.length} 条记录的店铺加入白名单`);
+      setCheckedIds(new Set());
+      load();
+    } else if (batchAction === "workorder") {
+      // 创建工单：跳转到工单页并预填
+      alert(`已选 ${ids.length} 条，请前往工单页创建批量工单（功能开发中）`);
+    }
+  };
 
   return (
     <div className="animate-in">
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>违规管理</h1>
 
-      {/* Filters */}
-      <div className="filter-bar" style={{ marginBottom: "1rem" }}>
+      {/* Filters & Batch Actions */}
+      <div className="filter-bar" style={{ marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
         <select className="input" style={{ width: 150 }} value={filters.platform}
           onChange={e => { setFilters({ ...filters, platform: e.target.value }); setPage(1); }}>
           <option value="">全部平台</option>
@@ -51,6 +121,27 @@ export default function ViolationsPage() {
           <option value="P0">P0 严重</option>
           <option value="P1">P1 一般</option>
         </select>
+
+        {checkedIds.size > 0 && (
+          <div style={{ display: "flex", gap: 8, marginLeft: 8 }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--accent-blue)", alignSelf: "center" }}>
+              已选 {checkedIds.size} 条
+            </span>
+            <select className="input" style={{ width: 120 }} value={batchAction}
+              onChange={e => setBatchAction(e.target.value)}>
+              <option value="">批量操作...</option>
+              <option value="whitelist">批量加白名单</option>
+              <option value="workorder">批量创建工单</option>
+            </select>
+            {batchAction && (
+              <button className="btn btn-primary" style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+                onClick={handleBatchOp}>
+                执行
+              </button>
+            )}
+          </div>
+        )}
+
         <span style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginLeft: "auto" }}>
           共 {total} 条记录
         </span>
@@ -62,6 +153,10 @@ export default function ViolationsPage() {
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: 36 }}>
+                  <input type="checkbox" checked={allChecked} onChange={toggleAll}
+                    style={{ cursor: "pointer", width: 14, height: 14 }} />
+                </th>
                 <th>ID</th>
                 <th>严重度</th>
                 <th>平台</th>
@@ -71,17 +166,28 @@ export default function ViolationsPage() {
                 <th>差额%</th>
                 <th>店铺</th>
                 <th>发货城市</th>
+                <th>截图</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
               {items.map((v: any) => (
-                <tr key={v.id}>
+                <tr key={v.id} style={{ background: checkedIds.has(v.id) ? "rgba(59,130,246,0.07)" : undefined }}>
+                  <td>
+                    <input type="checkbox" checked={checkedIds.has(v.id)} onChange={() => toggleItem(v.id)}
+                      style={{ cursor: "pointer", width: 14, height: 14 }} />
+                  </td>
                   <td style={{ color: "var(--text-muted)" }}>#{v.id}</td>
                   <td><span className={`badge badge-${v.severity.toLowerCase()}`}>{v.severity}</span></td>
                   <td>{PLATFORM_LABELS[v.platform] || v.platform}</td>
                   <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {v.product_name}
+                    {v.canonical_url ? (
+                      <a href={v.canonical_url.startsWith('http') ? v.canonical_url : '#'} target="_blank" rel="noopener"
+                        style={{ color: "inherit", textDecoration: "none" }}
+                        title={v.product_name}>
+                        {v.product_name}
+                      </a>
+                    ) : v.product_name}
                   </td>
                   <td style={{ color: "var(--accent-red)", fontWeight: 600 }}>¥{v.final_price}</td>
                   <td>¥{v.baseline_price}</td>
@@ -91,6 +197,14 @@ export default function ViolationsPage() {
                   </td>
                   <td style={{ color: "var(--text-muted)" }}>{v.ship_from_city || "-"}</td>
                   <td>
+                    {v.screenshot_path ? (
+                      <button className="btn btn-ghost" style={{ padding: "0.2rem 0.4rem", fontSize: "0.7rem" }}
+                        onClick={() => setScreenshotPath(v.screenshot_path)}>
+                        🖼️ 查看
+                      </button>
+                    ) : <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>无</span>}
+                  </td>
+                  <td>
                     <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
                       onClick={() => setSelected(v)}>
                       详情
@@ -99,7 +213,7 @@ export default function ViolationsPage() {
                 </tr>
               ))}
               {items.length === 0 && (
-                <tr><td colSpan={10} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无违规记录</td></tr>
+                <tr><td colSpan={12} style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem" }}>暂无违规记录</td></tr>
               )}
             </tbody>
           </table>
@@ -118,6 +232,9 @@ export default function ViolationsPage() {
           <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>下一页</button>
         </div>
       )}
+
+      {/* Screenshot Preview Modal */}
+      {screenshotPath && <ScreenshotModal path={screenshotPath} onClose={() => setScreenshotPath(null)} />}
 
       {/* Detail Modal */}
       {selected && (
@@ -141,11 +258,41 @@ export default function ViolationsPage() {
                 <Row label="链接">
                   <a href={selected.canonical_url?.startsWith('http') ? selected.canonical_url : '#'} target="_blank" rel="noopener"
                     style={{ color: "var(--accent-blue)", wordBreak: "break-all" }}>
-                    {selected.canonical_url.substring(0, 50)}...
+                    {selected.canonical_url.substring(0, 60)}...
                   </a>
                 </Row>
               )}
+              {selected.screenshot_path && (
+                <Row label="截图">
+                  <button className="btn btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                    onClick={() => { setSelected(null); setScreenshotPath(selected.screenshot_path); }}>
+                    🖼️ 查看截图
+                  </button>
+                </Row>
+              )}
               <Row label="创建时间">{selected.created_at ? new Date(selected.created_at).toLocaleString("zh-CN") : "-"}</Row>
+
+              {/* Quick Actions */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {selected.shop_name && (
+                  <button className="btn btn-ghost" style={{ fontSize: "0.75rem" }}
+                    onClick={async () => {
+                      await fetch("/api/whitelist", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ rule_type: "SHOP", match_pattern: selected.shop_name, platform: selected.platform, reason: "快速加白名单" }),
+                      });
+                      alert(`已将 "${selected.shop_name}" 加入白名单`);
+                      setSelected(null);
+                      load();
+                    }}>
+                    🟢 加白名单
+                  </button>
+                )}
+                <a href="/workorders" className="btn btn-ghost" style={{ fontSize: "0.75rem", textDecoration: "none" }}>
+                  📋 查看工单
+                </a>
+              </div>
             </div>
           </div>
         </div>

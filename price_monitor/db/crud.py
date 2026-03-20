@@ -9,7 +9,7 @@ from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
 
 from price_monitor.db.models import (
-    OfferSnapshot, Violation, BaselinePrice,
+    OfferSnapshot, Violation, BaselinePrice, BaselinePriceHistory,
     SearchKeyword, WhitelistRule, CookieAccount, ScrapeJob,
     WorkOrder, ResponsibilityRule, PeriodicReport, ReportSchedule,
     O2OStockLink
@@ -139,11 +139,27 @@ def get_baselines(session: Session) -> list[BaselinePrice]:
 
 
 def upsert_baseline(session: Session, data: dict) -> BaselinePrice:
-    """创建或更新基准价"""
+    """创建或更新基准价（自动写入历史记录）"""
     existing = session.query(BaselinePrice).filter(
         BaselinePrice.product_pattern == data["product_pattern"]
     ).first()
     if existing:
+        # 如果价格或 tolerance 有变化，写历史
+        new_price = data.get("baseline_price")
+        new_tol = data.get("tolerance_percent")
+        price_changed = new_price is not None and float(new_price) != float(existing.baseline_price)
+        tol_changed = new_tol is not None and new_tol != existing.tolerance_percent
+        if price_changed or tol_changed:
+            hist = BaselinePriceHistory(
+                baseline_id=existing.id,
+                old_price=existing.baseline_price,
+                new_price=data.get("baseline_price", existing.baseline_price),
+                old_tolerance=existing.tolerance_percent,
+                new_tolerance=data.get("tolerance_percent"),
+                changed_by=data.get("updated_by"),
+                reason=data.get("note"),
+            )
+            session.add(hist)
         for k, v in data.items():
             setattr(existing, k, v)
         session.flush()
@@ -265,6 +281,12 @@ def get_dashboard_stats(session: Session) -> dict:
         Violation.is_whitelisted == False,
     ).scalar()
 
+    # 最新 P0 违规（用于告警跑马灯）
+    latest_p0 = session.query(Violation).filter(
+        Violation.severity == "P0",
+        Violation.is_whitelisted == False,
+    ).order_by(desc(Violation.created_at)).limit(5).all()
+
     # 按平台分布
     platform_dist = session.query(
         Violation.platform,
@@ -284,7 +306,118 @@ def get_dashboard_stats(session: Session) -> dict:
         "today_violations": today_violations or 0,
         "platform_distribution": {p: c for p, c in platform_dist},
         "severity_distribution": {s: c for s, c in severity_dist},
+        "latest_p0_alerts": [
+            {
+                "id": v.id,
+                "product_name": v.product_name,
+                "platform": v.platform,
+                "final_price": float(v.final_price or 0),
+                "baseline_price": float(v.baseline_price or 0),
+                "shop_name": v.shop_name,
+                "gap_percent": float(v.gap_percent or 0),
+                "created_at": v.created_at.isoformat() if v.created_at else None,
+            }
+            for v in latest_p0
+        ],
     }
+
+
+def get_price_trend(
+    session: Session,
+    keyword: str = None,
+    platform: str = None,
+    days: int = 7,
+) -> list[dict]:
+    """
+    按天聚合价格趋势数据。
+    返回: [{date, avg_price, min_price, max_price, offer_count}]
+    """
+    from datetime import timedelta
+    from sqlalchemy import cast, Date as SADate
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    q = session.query(
+        func.date(OfferSnapshot.captured_at).label("day"),
+        func.avg(OfferSnapshot.final_price).label("avg_price"),
+        func.min(OfferSnapshot.final_price).label("min_price"),
+        func.max(OfferSnapshot.final_price).label("max_price"),
+        func.count(OfferSnapshot.id).label("offer_count"),
+    ).filter(
+        OfferSnapshot.captured_at >= cutoff,
+        OfferSnapshot.final_price > 0,
+    )
+    if keyword:
+        q = q.filter(OfferSnapshot.keyword.contains(keyword))
+    if platform:
+        q = q.filter(OfferSnapshot.platform == platform)
+    rows = q.group_by(func.date(OfferSnapshot.captured_at)).order_by("day").all()
+    return [
+        {
+            "date": str(r.day),
+            "avg_price": round(float(r.avg_price or 0), 2),
+            "min_price": round(float(r.min_price or 0), 2),
+            "max_price": round(float(r.max_price or 0), 2),
+            "offer_count": r.offer_count,
+        }
+        for r in rows
+    ]
+
+
+def get_baseline_history(session: Session, baseline_id: int) -> list[dict]:
+    """获取基准价变更历史"""
+    rows = session.query(BaselinePriceHistory).filter(
+        BaselinePriceHistory.baseline_id == baseline_id
+    ).order_by(desc(BaselinePriceHistory.changed_at)).all()
+    return [
+        {
+            "id": r.id,
+            "old_price": float(r.old_price),
+            "new_price": float(r.new_price),
+            "old_tolerance": float(r.old_tolerance) if r.old_tolerance else None,
+            "new_tolerance": float(r.new_tolerance) if r.new_tolerance else None,
+            "changed_by": r.changed_by,
+            "reason": r.reason,
+            "changed_at": r.changed_at.isoformat() if r.changed_at else None,
+        }
+        for r in rows
+    ]
+
+
+def get_collection_health_stats(session: Session, hours: int = 24) -> dict:
+    """
+    聚合近 N 小时各平台采集健康情况:
+    - 成功率
+    - 失败原因分布
+    - 平均任务数
+    """
+    from datetime import timedelta
+    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    jobs = session.query(ScrapeJob).filter(
+        ScrapeJob.created_at >= cutoff,
+        ScrapeJob.platform.isnot(None),
+    ).all()
+
+    stats: dict[str, dict] = {}
+    for j in jobs:
+        p = j.platform or "unknown"
+        if p not in stats:
+            stats[p] = {
+                "platform": p,
+                "total": 0, "success": 0, "failed": 0,
+                "fail_reasons": {},
+            }
+        s = stats[p]
+        s["total"] += 1
+        if j.status == "SUCCESS":
+            s["success"] += 1
+        elif j.status == "FAILED":
+            s["failed"] += 1
+            code = j.fail_reason_code or "UNKNOWN"
+            s["fail_reasons"][code] = s["fail_reasons"].get(code, 0) + 1
+
+    for s in stats.values():
+        s["success_rate"] = round(s["success"] / s["total"], 4) if s["total"] > 0 else 0
+
+    return {"hours": hours, "platforms": list(stats.values())}
 
 
 # ── ScrapeJob ──

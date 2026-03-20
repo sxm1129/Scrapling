@@ -18,6 +18,13 @@ const STATUS_COLORS: Record<string, string> = {
   OPEN: "#ef4444", IN_PROGRESS: "#f97316", WAITING_INFO: "#a855f7", RESOLVED: "#22c55e", REJECTED: "#6b7280",
 };
 
+const KANBAN_COLUMNS = [
+  { key: "OPEN", label: "待处理", color: "#ef4444" },
+  { key: "IN_PROGRESS", label: "处理中", color: "#f97316" },
+  { key: "WAITING_INFO", label: "等待信息", color: "#a855f7" },
+  { key: "RESOLVED", label: "已解决", color: "#22c55e" },
+];
+
 export default function WorkOrdersPage() {
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -29,6 +36,7 @@ export default function WorkOrdersPage() {
   const [actionNote, setActionNote] = useState("");
   const [showResolve, setShowResolve] = useState(false);
   const [allItems, setAllItems] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -97,7 +105,25 @@ export default function WorkOrdersPage() {
 
   return (
     <div className="animate-in">
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>工单管理</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>工单管理</h1>
+        {/* View Mode Toggle */}
+        <div style={{ display: "flex", gap: 4, background: "var(--bg-card)", borderRadius: 8, padding: 4, border: "1px solid var(--border)" }}>
+          {(["table", "kanban"] as const).map(mode => (
+            <button key={mode}
+              onClick={() => setViewMode(mode)}
+              style={{
+                padding: "0.3rem 0.75rem", fontSize: "0.75rem", borderRadius: 6, border: "none", cursor: "pointer",
+                background: viewMode === mode ? "var(--accent-blue)" : "transparent",
+                color: viewMode === mode ? "#fff" : "var(--text-secondary)",
+                fontWeight: viewMode === mode ? 600 : 400,
+                transition: "all 0.2s",
+              }}>
+              {mode === "table" ? "🗒 列表" : "📌 看板"}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* SLA Health Dashboard */}
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -148,6 +174,61 @@ export default function WorkOrdersPage() {
         </div>
       </div>
 
+      {/* Kanban View */}
+      {viewMode === "kanban" && (
+        <div className="kanban-board">
+          {KANBAN_COLUMNS.map(col => {
+            const colItems = allItems.filter(wo => wo.status === col.key);
+            return (
+              <div key={col.key} className="kanban-column"
+                onDragOver={e => e.preventDefault()}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  const woId = parseInt(e.dataTransfer.getData("wo_id"), 10);
+                  if (!woId || isNaN(woId)) return;
+                  await api.updateWorkOrder(woId, { status: col.key }).catch(() => {});
+                  load();
+                }}>
+                <div className="kanban-column-header" style={{ borderColor: col.color, color: col.color }}>
+                  <span>{col.label}</span>
+                  <span style={{ background: col.color + "22", padding: "1px 8px", borderRadius: 12, fontSize: "0.7rem" }}>
+                    {colItems.length}
+                  </span>
+                </div>
+                {colItems.map((wo: any) => (
+                  <div key={wo.id} className="kanban-card"
+                    draggable
+                    onDragStart={e => e.dataTransfer.setData("wo_id", String(wo.id))}
+                    onClick={() => openDetail(wo)}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>#{wo.id}</span>
+                      <span style={{
+                        fontSize: "0.65rem", fontWeight: 700, padding: "1px 6px", borderRadius: 4,
+                        background: SEVERITY_COLORS[wo.severity] + "22", color: SEVERITY_COLORS[wo.severity],
+                      }}>{wo.severity}</span>
+                    </div>
+                    <div style={{ fontSize: "0.78rem", fontWeight: 500, lineHeight: 1.4, marginBottom: 6 }}>
+                      {(wo.product_name || "").slice(0, 55)}</div>
+                    <div style={{ display: "flex", gap: 8, fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                      <span>{wo.platform}</span>
+                      {wo.final_price && <span style={{ color: "#f87171" }}>¥{wo.final_price}</span>}
+                    </div>
+                    {wo.sla_overdue && (
+                      <div style={{ marginTop: 4, fontSize: "0.65rem", color: "#ef4444", fontWeight: 600 }}>SLA 逆期 ⚠️</div>
+                    )}
+                  </div>
+                ))}
+                {colItems.length === 0 && (
+                  <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.75rem", padding: "2rem 0" }}>暂无工单</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Table View */}
+      {viewMode === "table" && (<>
       {/* Filters */}
       <div className="filter-bar" style={{ marginBottom: "1rem" }}>
         {[
@@ -202,6 +283,7 @@ export default function WorkOrdersPage() {
         <span style={{ padding: "0.5rem 1rem", color: "var(--text-muted)" }}>第 {page} 页</span>
         <button className="btn" disabled={items.length < 20} onClick={() => setPage(p => p + 1)}>下一页</button>
       </div>
+</>)}
 
       {/* Detail Drawer */}
       {selected && (
