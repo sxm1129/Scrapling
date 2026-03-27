@@ -1,0 +1,19 @@
+
+> web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.101.140:3000
+
+✓ Starting...
+✓ Ready in 649ms
+ GET / 200 in 850ms (compile: 706ms, render: 143ms)
+(node:5318) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ HEAD / 200 in 28ms (compile: 4ms, render: 24ms)
+ GET / 200 in 20ms (compile: 1117µs, render: 19ms)
+ GET /collection 200 in 63ms (compile: 52ms, render: 11ms)
+ GET /offers 200 in 42ms (compile: 31ms, render: 11ms)
+ GET /violations 200 in 48ms (compile: 38ms, render: 11ms)
+ GET /whitelist 200 in 54ms (compile: 42ms, render: 12ms)
